@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İlk Kürelerimizi Çizdirmek - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raytracing">Isin Izleme</a> &gt;
+        <span>İlk Kürelerimizi Çizdirmek</span>
+    </nav>
+    <main class="chapter-content">
+<h2>Parametre \( t \)'nin Anlamı</h2>
+<p>İşin izleme (ray tracing) algoritmasında, bir ışının gittiği yol matematiksel bir denklemle tanımlanır: \( P = O + tD \). Bu denklemde:</p>
+<ul>
+    <li>\( P \): Işının geçtiği herhangi bir nokta</li>
+    <li>\( O \): Işının başlangıç noktası, yani kamera</li>
+    <li>\( D \): Işının yön vektörü</li>
+    <li>\( t \): Parametre, ışının üzerindeki noktayı belirler</li>
+</ul>
+<p>Parametre \( t \) farklı değerler aldığında ışının hangi noktada olduğunu belirler:</p>
+<ul>
+    <li><strong>\( t = 0 \):</strong> Kamera noktasıdır (\( O \)). Işın kameradan çıkış anında buradadır.</li>
+    <li><strong>\( t = 1 \):</strong> Viewport (görüntü düzlemi) üzerindeki bir noktadır (\( V \)). Işın bu düzleme ulaştığında buradadır.</li>
+    <li><strong>\( t < 0 \):</strong> Işın kameranın arkasındadır, bu yüzden ilgilenmeyiz.</li>
+    <li><strong>\( t > 1 \):</strong> Işın, viewport'un ötesindeki gerçek sahne nesnelerine ulaşır.</li>
+    <li><strong>\( 0 < t < 1 \):</strong> Işın, kamera ile viewport arasında bir yerlerdedir.</li>
+</ul>
+<div class="figure"><img src="../../images/raytracing/figure-2-9.png" alt="Parametre uzayi"><div class="caption">Şekil 2-9: \( t \) parametresinin farklı aralık değerleri ve anlamları</div></div>
+<p>Bu nedenle, ışın izleme algoritmasında sadece viewport'un ötesindeki nesneleri görmek istediğimiz için \( t_{\text{min}} = 1 \) ve \( t_{\text{max}} = \infty \) seçiyoruz.</p>
+
+<h2>Tam Algoritma (Pseudocode)</h2>
+<p>İşin izleme algoritmamız aşağıdaki adımlarla çalışır:</p>
+
+<h3>Ana Döngü</h3>
+<ol>
+    <li>Her piksel \((x, y)\) için:</li>
+    <ul>
+        <li>CanvasToViewport(x, y) ile viewport üzerindeki noktayı bul</li>
+        <li>TraceRay(O, D, 1, ∞) ile pikselin rengini bul</li>
+        <li>PutPixel(x, y, renk) ile pikseli boya</li>
+    </ul>
+</ol>
+
+<h3>TraceRay Fonksiyonu</h3>
+<ul>
+    <li>Her küre için IntersectRaySphere çağırılır</li>
+    <li>En yakın kesişimi (en küçük \( t \)) bulur</li>
+    <li>O kürenin rengini döndürür</li>
+    <li>Kesişim yoksa arka plan rengini döndürür</li>
+</ul>
+
+<h3>IntersectRaySphere Fonksiyonu</h3>
+<ul>
+    <li>İkinci derece denklemi çözer</li>
+    <li>\( t_1 \) ve \( t_2 \) değerlerini döndürür</li>
+</ul>
+
+<div class="math-box">
+    <div class="box-title">📐 Matematik Notu: İkinci Derece Denklemi Çözme</div>
+    \[
+    t = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+    \]
+    Bu formül, ışının küre ile kesiştiği noktaları bulmak için kullanılır. \( a \), \( b \), ve \( c \) terimleri, ışının ve kürenin konumuna bağlı olarak hesaplanır.
+</div>
+
+<h2>Sahne Tanımlaması</h2>
+<p>Basit bir sahne tanımlayalım. Bu sahne, üç renkte küre ve bir zemin küresinden oluşur:</p>
+<ul>
+    <li><strong>Viewport:</strong> 1x1 boyutunda, mesafe \( d = 1 \)</li>
+    <li><strong>Kırmızı Küre:</strong> Merkez \((0, -1, 3)\), yarıçap 1</li>
+    <li><strong>Mavi Küre:</strong> Merkez \((2, 0, 4)\), yarıçap 1</li>
+    <li><strong>Yeşil Küre:</strong> Merkez \((-2, 0, 4)\), yarıçap 1</li>
+    <li><strong>Sarı Zemin:</strong> Merkez \((0, -5001, 0)\), yarıçap 5000</li>
+</ul>
+<div class="figure"><img src="../../images/raytracing/figure-2-10.png" alt="Sahne"><div class="caption">Şekil 2-10: 3 küreli basit sahnemiz</div></div>
+
+<h2>Sonuç</h2>
+<p>Bu algoritmayı çalıştırdığımızda, aşağıdaki gibi bir sonuç elde ederiz:</p>
+<div class="figure"><img src="../../images/raytracing/figure-2-11.png" alt="Sonuc"><div class="caption">Şekil 2-11: İlk ışın izleme görüntümüz - 3 renkli küre!</div></div>
+<p>Küreler, daire gibi görünür. Neden mi? Çünkü ışık modeli yok - nesneler düz renkli. Işık, gölge ve yansıma ekleyince daha gerçekçi görünecek. Bunlar sonraki bölümlerde işlenecek.</p>
+
+<h2>Raylib ile Tam Raytracer</h2>
+<div class="raylib-box">
+    <div class="box-title">🎮 Raylib: Raylib ile Basit Işın İzleme</div>
+    Aşağıdaki C kodu, Raylib kullanarak nasıl basit bir ışın izleme uygulayabileceğinizi gösterir. Her fonksiyon ve önemli satır detaylıca açıklanmıştır.
+</div>
+
+<div class="code-filename">ornek04_basit_raytracer.c</div>
+<pre><code class="language-c">#include "raylib.h"
+#include &lt;math.h&gt;
+#include &lt;float.h&gt;
+
+/*
+ * Ornek 04 - Basit Yazilimsal Isin Izleyici (Software Raytracer)
+ *
+ * "Computer Graphics from Scratch" kitabindaki temel isin izleme
+ * algoritmasini raylib ile gercekler.
+ *
+ * Algoritma:
+ * 1. Her piksel icin viewport uzerindeki noktayi hesapla
+ * 2. Kameradan o noktaya bir isin gonder
+ * 3. Isinin sahnedeki kurelerle kesisimini kontrol et
+ * 4. En yakin kesisim noktasindaki kurenin rengini piksel olarak ciz
+ */
+
+// ---- Vektor Yapisi ----
+typedef struct { float x, y, z; } Vec3;
+
+Vec3 vec3_sub(Vec3 a, Vec3 b) {
+    return (Vec3){ a.x - b.x, a.y - b.y, a.z - b.z };
+}
+
+Vec3 vec3_add(Vec3 a, Vec3 b) {
+    return (Vec3){ a.x + b.x, a.y + b.y, a.z + b.z };
+}
+
+Vec3 vec3_scale(Vec3 v, float s) {
+    return (Vec3){ v.x * s, v.y * s, v.z * s };
+}
+
+float vec3_dot(Vec3 a, Vec3 b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+float vec3_length(Vec3 v) {
+    return sqrtf(vec3_dot(v, v));
+}
+
+// ---- Kure Yapisi ----
+typedef struct {
+    Vec3 center;
+    float radius;
+    Color color;
+} Sphere;
+
+// ---- Sahne Tanimlamasi ----
+#define SPHERE_COUNT 4
+Sphere scene[SPHERE_COUNT] = {
+    { { 0.0f, -1.0f, 3.0f },    1.0f,    { 255, 0,   0,   255 } },  // Kirmizi
+    { { 2.0f,  0.0f, 4.0f },    1.0f,    { 0,   0,   255, 255 } },  // Mavi
+    { {-2.0f,  0.0f, 4.0f },    1.0f,    { 0,   255, 0,   255 } },  // Yesil
+    { { 0.0f, -5001.0f, 0.0f }, 5000.0f, { 255, 255, 0,   255 } },  // Sari zemin
+};
+
+// ---- Isin-Kure Kesisimi ----
+void IntersectRaySphere(Vec3 O, Vec3 D, Sphere s, float *t1, float *t2)
+{
+    Vec3 CO = vec3_sub(O, s.center);
+
+    float a = vec3_dot(D, D);
+    float b = 2.0f * vec3_dot(CO, D);
+    float c = vec3_dot(CO, CO) - s.radius * s.radius;
+
+    float discriminant = b * b - 4.0f * a * c;
+
+    if (discriminant &lt; 0.0f) {
+        *t1 = FLT_MAX;
+        *t2 = FLT_MAX;
+        return;
+    }
+
+    float sqrt_disc = sqrtf(discriminant);
+    *t1 = (-b + sqrt_disc) / (2.0f * a);
+    *t2 = (-b - sqrt_disc) / (2.0f * a);
+}
+
+// ---- Isin Izleme ----
+Color TraceRay(Vec3 O, Vec3 D, float t_min, float t_max)
+{
+    float closest_t = FLT_MAX;
+    int closest_idx = -1;
+
+    for (int i = 0; i &lt; SPHERE_COUNT; i++) {
+        float t1, t2;
+        IntersectRaySphere(O, D, scene[i], &amp;t1, &amp;t2);
+
+        if (t1 &gt;= t_min &amp;&amp; t1 &lt;= t_max &amp;&amp; t1 &lt; closest_t) {
+            closest_t = t1;
+            closest_idx = i;
+        }
+        if (t2 &gt;= t_min &amp;&amp; t2 &lt;= t_max &amp;&amp; t2 &lt; closest_t) {
+            closest_t = t2;
+            closest_idx = i;
+        }
+    }
+
+    if (closest_idx == -1) return RAYWHITE;
+    return scene[closest_idx].color;
+}
+
+// ---- Canvas -&gt; Viewport Donusumu ----
+Vec3 CanvasToViewport(int cx, int cy, int cw, int ch)
+{
+    return (Vec3){
+        (float)cx / (float)cw,   // Vw = 1
+        (float)cy / (float)ch,   // Vh = 1
+        1.0f                      // d  = 1
+    };
+}
+
+int main(void)
+{
+    const int CW = 600;
+    const int CH = 600;
+
+    InitWindow(CW, CH, "Ornek 04 - Yazilimsal Isin Izleyici (Raytracer)");
+
+    // Render hedefi
+    Image img = GenImageColor(CW, CH, RAYWHITE);
+    Vec3 O = { 0.0f, 0.0f, 0.0f };
+
+    // ---- ANA ISIN IZLEME DONGUSU ----
+    for (int x = -CW / 2; x &lt; CW / 2; x++) {
+        for (int y = -CH / 2; y &lt; CH / 2; y++) {
+            Vec3 D = CanvasToViewport(x, y, CW, CH);
+            Color color = TraceRay(O, D, 1.0f, FLT_MAX);
+
+            int sx = x + CW / 2;
+            int sy = CH / 2 - y;
+            if (sx &gt;= 0 &amp;&amp; sx &lt; CW &amp;&amp; sy &gt;= 0 &amp;&amp; sy &lt; CH) {
+                ImageDrawPixel(&amp;img, sx, sy, color);
+            }
+        }
+    }
+
+    Texture2D texture = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+            DrawTexture(texture, 0, 0, WHITE);
+
+            DrawRectangle(0, 0, CW, 55, Fade(BLACK, 0.6f));
+            DrawText("Yazilimsal Isin Izleyici", 10, 8, 22, WHITE);
+            DrawText("4 kure: Kirmizi(0,-1,3) Mavi(2,0,4) Yesil(-2,0,4) Sari(zemin)",
+                     10, 33, 14, LIGHTGRAY);
+        EndDrawing();
+    }
+
+    UnloadTexture(texture);
+    CloseWindow();
+    return 0;
+}
+</code></pre>
+
+<h3>Bu Kod Ne Yapiyor?</h3>
+
+<p>Kod parçası, bir ışın izleme (ray tracing) algoritması gerçekleştirir. Şimdi adım adım inceleyelim:</p>
+
+<h4>Vektor Yapısı</h4>
+<p><strong>typedef struct { float x, y, z; } Vec3;</strong><br/>
+Vec3 yapısı, üç boyutlu bir vektörü temsil eder ve x, y, z bileşenlerine sahiptir.</p>
+
+<h4>Vec3 İşlemleri</h4>
+<ul>
+    <li><strong>vec3_sub:</strong> İki vektörün farkını hesaplar.</li>
+    <li><strong>vec3_add:</strong> İki vektörü toplar.</li>
+    <li><strong>vec3_scale:</strong> Bir vektörü bir skaler ile çarpar.</li>
+    <li><strong>vec3_dot:</strong> İki vektörün skaler çarpımını hesaplar.</li>
+    <li><strong>vec3_length:</strong> Bir vektörün uzunluğunu hesaplar.</li>
+</ul>
+
+<h4>Küre Yapısı</h4>
+<p><strong>typedef struct { Vec3 center; float radius; Color color; } Sphere;</strong><br/>
+Sphere yapısı, bir küreyi temsil eder ve merkezi, yarıçapı ve rengi bilgilerini içerir.</p>
+
+<h4>Sahne Tanımlaması</h4>
+<p>Sahne, dört küreden oluşur: üç renkli küre ve bir zemin küresi. Her biri farklı konum ve renge sahiptir.</p>
+
+<h4>Işın-Küre Kesişimi</h4>
+<p><strong>void IntersectRaySphere(Vec3 O, Vec3 D, Sphere s, float *t1, float *t2)</strong><br/>
+Bu fonksiyon, bir ışının bir küre ile kesişim noktalarını bulur. İkinci derece denklemin diskriminantını hesaplar ve iki kesişim noktasını döndürür.</p>
+
+<h4>Işın İzleme</h4>
+<p><strong>Color TraceRay(Vec3 O, Vec3 D, float t_min, float t_max)</strong><br/>
+Bu fonksiyon, en yakın kesişimi bulur ve o kürenin rengini döndürür. Kesişim yoksa, arka plan rengini döndürür.</p>
+
+<h4>Canvas -> Viewport Dönüşümü</h4>
+<p><strong>Vec3 CanvasToViewport(int cx, int cy, int cw, int ch)</strong><br/>
+Bu fonksiyon, bir piksel koordinatını viewport üzerindeki bir noktaya dönüştürür.</p>
+
+<h4>Ana Döngü</h4>
+<p><strong>int main(void)</strong><br/>
+Ana fonksiyon, her piksel için ışın izleme işlemini gerçekleştirir ve sonuçları bir görüntüye yazar. Her piksel için ışın yönü hesaplanır ve TraceRay fonksiyonu çağrılır. Sonuç olarak elde edilen renk, görüntüye çizilir.</p>
+
+<div class="try-box">
+    <div class="box-title">🧪 Deneyin: Küre Konumunu Değiştirin</div>
+    Kırmızı kürenin merkezini (0, -1, 3) yerine (0, 0, 3) yapın. Küre nereye kaydı?
+</div>
+
+<h2>Özet ve Sıradaki Adımlar</h2>
+<p>Bu bölümde, ışın izleme algoritmasının temel prensiplerini öğrendik: kamera, viewport, ışın denklemi, küre denklemi, kesişim ve algoritmanın nasıl çalıştığını gördük. Kürelerin neden düz renkli göründüğünü (ışık modeli eksikliği) anladık.</p>
+<p>Sonraki bölümde, ışık modelini inceleyeceğiz: diffuse, specular ve ambient bileşenleri ekleyerek daha gerçekçi görüntüler elde edeceğiz.</p>
+    </main>
+    <nav class="chapter-nav">
+        <a href="04-isin-kure-kesisimi.html" class="prev">Işın-Küre Kesişimi</a>
+        <a href="../light/01-isik-giris.html" class="next">Işık ve Aydınlatma</a>
+    </nav>
+    <footer class="site-footer">
+        <p>Esinlenme kaynagi: <a href="https://gabrielgambetta.com/computer-graphics-from-scratch/" target="_blank">Computer Graphics from Scratch</a> &mdash; Gabriel Gambetta</p>
+    </footer>
+</body>
+</html>

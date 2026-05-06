@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Işın-Küre Kesişimi - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raytracing">Isin Izleme</a> &gt;
+        <span>Işın-Küre Kesişimi</span>
+    </nav>
+    <main class="chapter-content">
+<h2>Isın ve Kürenin Kesişimini Matematiksel Olarak Türetme</h2>
+
+<p>Bu yazıda, bir ışının bir küre ile nerede kesiştiğini matematiksel olarak nasıl belirleyebileceğimizi adım adım inceleyeceğiz. Bu problem, bilgisayar grafiklerinde ve özellikle ışın izleme (ray tracing) tekniklerinde çok önemli bir yer tutar.</p>
+
+<h3>Problem Tanımı</h3>
+
+<p>Elimizde iki denklem var:</p>
+
+<ul>
+  <li><strong>Işın:</strong> \( P = O + t\vec{D} \)</li>
+  <li><strong>Küre:</strong> \( \langle P - C, P - C \rangle = r^2 \)</li>
+</ul>
+
+<p>Burada:</p>
+
+<ul>
+  <li>\( P \) kesişim noktasıdır.</li>
+  <li>\( O \) ışının başlangıç noktasıdır (orijin).</li>
+  <li>\( \vec{D} \) ışının yönünü belirten birim vektördür.</li>
+  <li>\( t \) ışın üzerindeki herhangi bir noktayı belirten bir parametredir.</li>
+  <li>\( C \) kürenin merkezidir.</li>
+  <li>\( r \) kürenin yarıçapıdır.</li>
+</ul>
+
+<p>Bu iki denklemin aynı anda sağlandığı \( P \) noktalarını bulmak istiyoruz. Yani, ışın küreyle nerede kesişiyor?</p>
+
+<h3>Denklemi Türetme</h3>
+
+<p>İlk olarak ışının denklemini kürenin denklemine yerleştireceğiz. Bu adım adım türetme işlemini aşağıda detaylı olarak inceleyelim:</p>
+
+<h4>Adım 1: Işın Denklemini Küre Denklemine Yerleştirin</h4>
+
+<p>Işının denklemini, \( P \) yerine kürenin denklemine koyarak başlıyoruz:</p>
+
+\[ \langle O + t\vec{D} - C, O + t\vec{D} - C \rangle = r^2 \]
+
+<p>Bu adım, ışın denklemini küreyle kesişim noktasını bulmak için kullanacağımız denklemde uygulamamız gereken ilk adımdır.</p>
+
+<h4>Adım 2: \( \vec{CO} = O - C \) Tanımlayın</h4>
+
+<p>Kürenin merkezi ile ışının başlangıç noktası arasındaki vektörü tanımlayarak denklemi basitleştirebiliriz:</p>
+
+\[ \vec{CO} = O - C \]
+
+<p>Bu tanım, denklemleri daha anlaşılır hale getirmek için bir adımdır.</p>
+
+<h4>Adım 3: Denklemi Dağıtın</h4>
+
+<p>Şimdi denklemi dağıtalım:</p>
+
+\[ \langle \vec{CO} + t\vec{D}, \vec{CO} + t\vec{D} \rangle = r^2 \]
+
+<p>Bu adımda dağıtma işlemi yaparak denklemi daha basit bir forma sokuyoruz.</p>
+
+<h4>Adım 4: Nokta Çarpımının Dağıtma Özelliğini Kullanın</h4>
+
+<p>Nokta çarpımının (dot product) dağıtma özelliğini kullanarak denklemi açalım:</p>
+
+\[ \langle \vec{CO}, \vec{CO} \rangle + 2\langle \vec{CO}, t\vec{D} \rangle + \langle t\vec{D}, t\vec{D} \rangle = r^2 \]
+
+<p>Burada, nokta çarpımının dağıtma özelliğini uygulayarak denklemin her bir terimini ayrı ayrı açıyoruz.</p>
+
+<h4>Adım 5: \( t \)'yi Dışarı Çıkarın</h4>
+
+<p>Sonraki adımda \( t \) parametresini denklemin dışına alıyoruz:</p>
+
+\[ t^2 \langle \vec{D}, \vec{D} \rangle + 2t \langle \vec{CO}, \vec{D} \rangle + \langle \vec{CO}, \vec{CO} \rangle - r^2 = 0 \]
+
+<p>Bu adım, denklemi ikinci derece bir denkleme dönüştürmemizi sağlayacak olan kritik adımdır.</p>
+
+<h4>Adım 6: İkinci Derece Denklem Formuna Getirin</h4>
+
+<p>Son olarak, denklemi ikinci derece bir denklem formuna sokuyoruz:</p>
+
+<ul>
+  <li>\( a = \langle \vec{D}, \vec{D} \rangle \)</li>
+  <li>\( b = 2\langle \vec{CO}, \vec{D} \rangle \)</li>
+  <li>\( c = \langle \vec{CO}, \vec{CO} \rangle - r^2 \)</li>
+</ul>
+
+<p>Bu, bize şu formdaki bir ikinci derece denklem verir:</p>
+
+\[ at^2 + bt + c = 0 \]
+
+<p>Bu aşamada, denklemi çözmek için ikinci derece denklemlerle ilgili bilgileri kullanacağız.</p>
+
+<div class="math-box">
+  <div class="box-title">📐 Matematik Notu: İkinci Derece Denklem</div>
+  <p>İkinci derece denklemler, genel formu \( ax^2 + bx + c = 0 \) olan denklemlerdir. Bu tür denklemlerin çözümü için kullanılan formül:</p>
+  
+  \[
+  x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+  \]
+
+  <p>Buradaki:</p>
+  <ul>
+    <li>\( \pm \) iki farklı çözümün olduğunu gösterir.</li>
+    <li>Diskriminant \( b^2 - 4ac \) olarak adlandırılır ve çözümün sayısını belirler:</li>
+    <ul>
+      <li><strong>Diskriminant > 0:</strong> İki farklı çözüm (ışın küreyi iki noktada keser).</li>
+      <li><strong>Diskriminant = 0:</strong> Tek çözüm (ışın küreye teğet).</li>
+      <li><strong>Diskriminant < 0:</strong> Çözüm yok (ışın küreyi kesmez).</li>
+    </ul>
+  </ul>
+
+  <p>Sayısal Örnek:</p>
+  <p>Denklem: \( x^2 - 5x + 6 = 0 \)</p>
+  <ul>
+    <li>\( a = 1 \), \( b = -5 \), \( c = 6 \)</li>
+    <li>Diskriminant: \( (-5)^2 - 4 \times 1 \times 6 = 25 - 24 = 1 \) (pozitif)</li>
+    <li>Çözümler: \( x = \frac{5 \pm 1}{2} \) yani \( x_1 = 3 \), \( x_2 = 2 \)</li>
+  </ul>
+
+  <p>Geometrik Anlam: Diskriminant pozitif olduğunda, ışın küreyi iki farklı noktada keser. Diskriminant sıfırsa, ışın küreye teğettir yani tam olarak bir noktada dokunur. Diskriminant negatifse, ışın küreyi hiç kesmez.</p>
+</div>
+
+<h3>Geometrik Yorum</h3>
+
+<div class="figure"><img src="../../images/raytracing/figure-2-8.png" alt="Kesisim durumlari"><div class="caption">Sekil 2-8: Üç durum - kesişim yok, temas (teğet), iki noktada kesişim</div></div>
+
+<p>Geometrik olarak, ışının küre ile etkileşimi üç farklı şekilde olabilir:</p>
+
+<ul>
+  <li><strong>Işın küreyi kesmez:</strong> Diskriminant negatiftir. Bu durumda, ışın kürenin tamamen dışından geçer ve hiçbir temas noktası yoktur.</li>
+  <li><strong>Işın küreye teğet:</strong> Diskriminant sıfırdır. Bu durumda, ışın küreye tam yüzeyden bir noktada dokunur. Bu nokta, ışının küreye en yakın olduğu noktadır.</li>
+  <li><strong>Işın küreyi iki noktada keser:</strong> Diskriminant pozitiftir. Bu durumda, ışın küreye girer ve çıkar. İki farklı kesişim noktası vardır.</li>
+</ul>
+
+<h3>Sayısal Örnek</h3>
+
+<p>Şimdi, yukarıda türettiğimiz denklemleri kullanarak bir sayısal örnek yapalım:</p>
+
+<p>Verilenler:</p>
+
+<ul>
+  <li><strong>Kamera Orijini (O):</strong> \( (0, 0, 0) \)</li>
+  <li><strong>Işın Yönü (D):</strong> \( (0, 0, 1) \)</li>
+  <li><strong>Küre Merkezi (C):</strong> \( (0, 0, 5) \)</li>
+  <li><strong>Yarıçap (r):</strong> \( 1 \)</li>
+</ul>
+
+<p>Adım adım hesap:</p>
+
+<ol>
+  <li>\( \vec{CO} = O - C = (0, 0, -5) \)</li>
+  <li>\( a = \langle D, D \rangle = 1 \)</li>
+  <li>\( b = 2\langle \vec{CO}, D \rangle = 2(0 \cdot 0 + 0 \cdot 0 + (-5) \cdot 1) = -10 \)</li>
+  <li>\( c = \langle \vec{CO}, \vec{CO} \rangle - r^2 = 25 - 1 = 24 \)</li>
+  <li>Diskriminant: \( b^2 - 4ac = 100 - 96 = 4 \)</li>
+  <li>Çözümler:</li>
+  <ul>
+    <li>\( t_1 = \frac{10 + 2}{2} = 6 \)</li>
+    <li>\( t_2 = \frac{10 - 2}{2} = 4 \)</li>
+  </ul>
+</ol>
+
+<p>Yorum: Işın küreye \( t = 4 \)'te girer ve \( t = 6 \)'da çıkar. Bu, ışının küre ile iki noktada kesiştiğini gösterir.</p>
+
+<div class="info-box">
+  <div class="box-title">ℹ️ Bilgi: Nokta Çarpımın Faydaları</div>
+  <p>Nokta çarpımı (dot product), vektörler arasında uzunluk hesaplama, açıyı bulma ve projeksiyon yapmada kullanılır. İki vektörün nokta çarpımı, bu vektörler arasındaki açının kosinüsüyle doğru orantılıdır. Bu özellik, özellikle grafik programlamada ve fizik simülasyonlarında sıkça kullanılır.</p>
+</div>
+
+<div class="try-box">
+  <div class="box-title">🧪 Deneyin: Küre Yarıçapını Değiştirin</div>
+  <p>Kodda küre yarıçapını \( r = 1 \) yerine \( r = 2 \) yapın ve diskriminantın nasıl değiştiğini gözlemleyin. Beklenen: Diskriminantın artması ve kesişim noktalarının değişmesi. Dosya: <em>your_code.c</em></p>
+</div>
+
+<div class="try-box">
+  <div class="box-title">🧪 Deneyin: Işın Yönünü Değiştirin</div>
+  <p>Işın yönünü \( D = (0, 0, 1) \) yerine \( D = (1, 1, 1) \) yapın. Kesişim olup olmadığını kontrol edin. Beklenen: Işının yönü değiştiği için kesişim noktalarının farklılaşması. Dosya: <em>your_code.c</em></p>
+</div>
+    </main>
+    <nav class="chapter-nav">
+        <a href="03-isinlari-izleme.html" class="prev">Işınları İzlemek</a>
+        <a href="05-ilk-kurelerimiz.html" class="next">İlk Kürelerimizi Çizdirmek</a>
+    </nav>
+    <footer class="site-footer">
+        <p>Esinlenme kaynagi: <a href="https://gabrielgambetta.com/computer-graphics-from-scratch/" target="_blank">Computer Graphics from Scratch</a> &mdash; Gabriel Gambetta</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Specular (Aynamsı) Yansıma - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raytracing">Isin Izleme</a> &gt;
+        <span>Specular (Aynamsı) Yansıma</span>
+    </nav>
+    <main class="chapter-content">
+<h2>Parlak Nesneler ve Specular Yansıma</h2>
+
+<p>Mat nesneler ışığı her yöne saçar; bu, örneğin bir kağıt yüzeyinin ışığı nasıl yaydığını düşünmek gibidir. Ancak parlak nesneler farklı davranır. Örneğin, bir bilardo topu veya cilalanmış bir araba yüzeyi gibi parlak nesneler üzerinde, ışık kaynağına bağlı olarak parlak noktalar (highlights) görürsünüz. Bu noktalar hareket ettikçe, ışık kaynağına göre konum değiştirir. İşte bu, specular yansıma dediğimiz olaydır. Latince "speculum" kelimesi "ayna" anlamına gelir ve parlak yüzeylerin belirli bir düzen içinde ışığı yansıtarak ayna benzeri bir etki oluşturduğu anlamına gelir.</p>
+
+<p>Specular yansıma, diffuse yansımanın yerine geçmez, aksine onu tamamlar. Diffuse yansıma, yüzeyin genel aydınlatması için önemlidir ancak parlaklık ve derinlik etkisi specular yansıma ile sağlanır.</p>
+
+<h2>Yüzey Pürüzlülüğü</h2>
+
+<p>Bir yüzeyin pürüzlülüğü, onun ışığı nasıl yansıttığını belirleyen önemli bir faktördür. Mat yüzeyler, mikroskobik düzeyde rastgele yönlenmiş parçacıklardan oluşur ve bu parçacıklar ışığı her yöne saçar.</p>
+
+<div class="figure"><img src="../../images/light/06-rough-surface.png" alt="Puruzlu yuzey"><div class="caption">Sekil 3-8: Mat yüzey - mikroskobik düzeyde rastgele yönlenmiş parçacıklar</div></div>
+
+<p>Buna karşılık, parlak yüzeyler düzgündür ve ışık belirli bir yönde yansır. Bu tür yüzeylerde, ışığın yansıdığı yön (R) belirginleşir.</p>
+
+<div class="figure"><img src="../../images/light/06-mirror.png" alt="Ayna yuzey"><div class="caption">Sekil 3-9: Parlak yüzey (ayna) - ışık tek yönde yansır</div></div>
+
+<p>Cilalanmışlık derecesine göre R etrafında ne kadar ışık dağıldığı değişir. Bu, yüzeyin ne kadar parlak olduğuna bağlıdır. Işık, yüzeyin pürüzsüzlük derecesine bağlı olarak R etrafında yoğunlaşır veya dağılır.</p>
+
+<div class="figure"><img src="../../images/light/07-specular-decay.png" alt="Specular dagilim"><div class="caption">Sekil 3-10: Parlaklık derecesine göre ışık dağılımı - R etrafında yoğunlaşma</div></div>
+
+<h2>Yansıma Vektörü \( \vec{R} \) Hesaplama</h2>
+
+<p>Specular yansımanın matematiksel olarak modellenmesi için birkaç vektör kullanırız:</p>
+
+<ul>
+    <li>\( \vec{L} \): Işık yönünü belirtir (ışığa doğru).</li>
+    <li>\( \vec{N} \): Yüzey normali (yüzeye dik vektör).</li>
+    <li>\( \vec{R} \): Yansıma vektörü, \( \vec{L} \)'nin \( \vec{N} \)'e göre simetriğidir.</li>
+    <li>\( \vec{V} \): Görüntüye doğru (kameraya) vektör, genellikle \( -\vec{D} \) olarak tanımlanır.</li>
+    <li>\( \alpha \): \( \vec{R} \) ile \( \vec{V} \) arasındaki açı.</li>
+</ul>
+
+<div class="figure"><img src="../../images/light/07-specular-diagram.png" alt="Specular diyagram"><div class="caption">Sekil 3-11: V, R ve alpha açısı</div></div>
+
+<p>İlk adım, L vektörünü N'e paralel ve dik bileşenlerine ayırmaktır:</p>
+
+<div class="math-box">
+  <div class="box-title">📐 Matematik Notu: L'nin Bileşenleri</div>
+  \( \vec{L_N} = \vec{N} \langle \vec{N}, \vec{L} \rangle \) (N'e paralel bileşen)<br>
+  \( \vec{L_P} = \vec{L} - \vec{L_N} \) (N'e dik bileşen)
+</div>
+
+<div class="figure"><img src="../../images/light/08-nl.png" alt="L bilesenleri"><div class="caption">Sekil 3-14: L vektörünün N'e paralel ve dik bileşenleri</div></div>
+
+<p>Bu bileşenleri kullanarak, R vektörünü L'nin N'e göre simetriği olarak hesaplarız:</p>
+
+<div class="math-box">
+  <div class="box-title">📐 Matematik Notu: R Vektörü</div>
+  \( \vec{R} = \vec{L_N} - \vec{L_P} = 2\vec{N} \langle \vec{N}, \vec{L} \rangle - \vec{L} \)
+</div>
+
+<div class="figure"><img src="../../images/light/08-vec-r.png" alt="R vektoru"><div class="caption">Sekil 3-15: R vektörü - L'nin N'e göre simetrik yansıması</div></div>
+
+<p>Örneğin, diyelim ki L vektörümüz \( (1, 2, 3) \), N vektörümüz ise \( (0, 1, 0) \) olsun. İlk olarak L'nin N'e paralel bileşenini bulalım:</p>
+
+<pre><code class="language-c">
+float dotNL = v_dot(N, L); // N·L
+Vec3 LN = v_scl(N, dotNL); // L_N = N * (N·L)
+</code></pre>
+
+<p>Bu hesaplamadan sonra, L'nin N'e dik bileşenini buluruz:</p>
+
+<pre><code class="language-c">
+Vec3 LP = v_sub(L, LN); // L_P = L - L_N
+</code></pre>
+
+<p>Son olarak, R vektörünü hesaplarız:</p>
+
+<pre><code class="language-c">
+Vec3 R = v_sub(v_scl(N, 2.0f * dotNL), L); // R = 2*N*dotNL - L
+</code></pre>
+
+<h2>Specular Formül</h2>
+
+<p>Cosine fonksiyonu, specular yansımanın hesaplanmasında önemli bir rol oynar. Cosine fonksiyonunun bazı güzel özellikleri vardır:</p>
+
+<ul>
+    <li>\( \cos(0) = 1 \) - Tam yansıma yönünde bakıyorsak maksimum parlaklık elde ederiz.</li>
+    <li>\( \cos(90) = 0 \) - Yana bakıyorsak parlaklık yoktur.</li>
+</ul>
+
+<div class="figure"><img src="../../images/light/07-cos-alpha.png" alt="cos alpha"><div class="caption">Sekil 3-12: cos(alpha) grafiği - 0'da max, 90'da sıfır</div></div>
+
+<p>Farklı parlaklık dereceleri için \( \cos(\alpha)^s \) kullanıyoruz. Burada \( s \) specular exponent olarak adlandırılır ve parlaklığın dağılımını kontrol eder:</p>
+
+<ul>
+    <li>\( s \) büyükse -> dar parlak nokta (çok parlak).</li>
+    <li>\( s \) küçükse -> geniş parlak alan (az parlak).</li>
+</ul>
+
+<div class="figure"><img src="../../images/light/07-specular-exponent.png" alt="Specular exponent"><div class="caption">Sekil 3-13: Farklı s değerleri için cos(alpha)^s grafikleri</div></div>
+
+<p>Specular terimi şu şekilde hesaplanır:</p>
+
+<div class="math-box">
+  <div class="box-title">📐 Matematik Notu: Specular Aydınlatma</div>
+  \[ I_S = I_L \left( \frac{\langle \vec{R}, \vec{V} \rangle}{|\vec{R}| \cdot |\vec{V}|} \right)^s \]
+</div>
+
+<p>Bu denklemde:</p>
+
+<ul>
+    <li>\( I_S \): Specular ışık yoğunluğu.</li>
+    <li>\( I_L \): Işık kaynağının yoğunluğu.</li>
+    <li>\( \langle \vec{R}, \vec{V} \rangle \): R ve V vektörlerinin dot çarpımı.</li>
+    <li>\( s \): Specular exponent.</li>
+</ul>
+
+<h2>Tam Aydınlatma Denklemi</h2>
+
+<p>Bir yüzeyin toplam aydınlatmasını hesaplarken hem diffuse hem de specular bileşenler göz önünde bulundurulmalıdır:</p>
+
+<div class="math-box">
+  <div class="box-title">📐 Matematik Notu: Tam Aydınlatma Denklemi</div>
+  \[ I_P = I_A + \sum_{i=1}^{n} I_i \left[ \frac{\langle \vec{N}, \vec{L_i} \rangle}{|\vec{N}| |\vec{L_i}|} + \left( \frac{\langle \vec{R_i}, \vec{V} \rangle}{|\vec{R_i}| |\vec{V}|} \right)^s \right] \]
+</div>
+
+<p>Bu denklemde, her terim şu anlama gelir:</p>
+
+<ul>
+    <li>\( I_P \): Yüzeydeki toplam ışık yoğunluğu.</li>
+    <li>\( I_A \): Ortam ışığı.</li>
+    <li>\( I_i \): Her ışık kaynağının yoğunluğu.</li>
+    <li>\( \langle \vec{N}, \vec{L_i} \rangle \): Diffuse bileşen.</li>
+    <li>\( \left( \frac{\langle \vec{R_i}, \vec{V} \rangle}{|\vec{R_i}| |\vec{V}|} \right)^s \): Specular bileşen.</li>
+</ul>
+
+<h2>Sahne Güncelleme</h2>
+
+<p>Kürelerin specular değerlerini güncelleyelim:</p>
+
+<ul>
+    <li>Kırmızı: \( s=500 \) (parlak).</li>
+    <li>Mavi: \( s=500 \) (parlak).</li>
+    <li>Yeşil: \( s=10 \) (biraz parlak).</li>
+    <li>Zemin: \( s=1000 \) (çok parlak).</li>
+</ul>
+
+<p>Mat nesneler için \( s=-1 \) (specular hesaplanmaz).</p>
+
+<h2>Specular Sonuç</h2>
+
+<div class="figure"><img src="../../images/light/raytracer-03.png" alt="Specular sonuc"><div class="caption">Sekil 3-16: Diffuse + Specular ile render - parlak noktalar belirdi!</div></div>
+
+<p>Kırmızı kürede (s=500) dar parlak bir nokta oluşurken, yeşil kürede (s=10) geniş bir parlak alan oluştuğunu görebilirsiniz.</p>
+
+<h2>Raylib Kodu: Specular Aydınlatma</h2>
+
+<div class="raylib-box">
+  <div class="box-title">🎮 Raylib: Specular Aydınlatma Kodu</div>
+  <div class="code-filename">ornek06_specular_aydinlatma.c</div>
+  <pre><code class="language-c">#include "raylib.h"
+#include &lt;math.h&gt;
+#include &lt;float.h&gt;
+
+/*
+ * Ornek 06 - Specular (Aynamsı) Aydinlatma ile Isin Izleyici
+ *
+ * Diffuse modele specular yansima eklenir.
+ * Her kurenin bir "specular" ustu (parlaklık katsayisi) vardir.
+ * R = 2N(N·L) - L formuluyle yansima vektoru hesaplanir.
+ * cos(alpha)^s ile parlak noktalar olusturulur.
+ */
+
+// ---- Vektor Islemleri ----
+typedef struct { float x, y, z; } Vec3;
+
+Vec3 v_add(Vec3 a, Vec3 b) { return (Vec3){a.x+b.x, a.y+b.y, a.z+b.z}; }
+Vec3 v_sub(Vec3 a, Vec3 b) { return (Vec3){a.x-b.x, a.y-b.y, a.z-b.z}; }
+Vec3 v_scl(Vec3 v, float s) { return (Vec3){v.x*s, v.y*s, v.z*s}; }
+float v_dot(Vec3 a, Vec3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
+float v_len(Vec3 v) { return sqrtf(v_dot(v, v)); }
+Vec3 v_norm(Vec3 v) { float l = v_len(v); return (Vec3){v.x/l, v.y/l, v.z/l}; }
+
+// ---- Kure (specular eklendi) ----
+typedef struct {
+    Vec3 center;
+    float radius;
+    unsigned char r, g, b;
+    int specular;  // -1 = mat, &gt;0 = parlak
+} Sphere;
+
+#define SPHERE_COUNT 4
+Sphere spheres[SPHERE_COUNT] = {
+    {{ 0.0f, -1.0f,  3.0f}, 1.0f,    255,   0,   0,  500},  // Kirmizi - parlak
+    {{ 2.0f,  0.0f,  4.0f}, 1.0f,      0,   0, 255,  500},  // Mavi    - parlak
+    {{-2.0f,  0.0f,  4.0f}, 1.0f,      0, 255,   0,   10},  // Yesil   - biraz parlak
+    {{ 0.0f,-5001.0f,0.0f}, 5000.0f, 255, 255,   0, 1000},  // Zemin   - cok parlak
+};
+
+// ---- Isik Kaynaklari ----
+typedef enum { L_AMBIENT, L_POINT, L_DIRECTIONAL } LType;
+typedef struct { LType type; float intensity; Vec3 pos; Vec3 dir; } Light;
+
+#define LIGHT_COUNT 3
+Light lights[LIGHT_COUNT] = {
+    { L_AMBIENT,     0.2f, {0,0,0}, {0,0,0}  },
+    { L_POINT,       0.6f, {2,1,0}, {0,0,0}  },
+    { L_DIRECTIONAL, 0.2f, {0,0,0}, {1,4,4}  },
+};
+
+// ---- Isin-Kure Kesisimi ----
+void IntersectRS(Vec3 O, Vec3 D, Sphere s, float *t1, float *t2)
+{
+    Vec3 CO = v_sub(O, s.center);
+    float a = v_dot(D, D);
+    float b = 2.0f * v_dot(CO, D);
+    float c = v_dot(CO, CO) - s.radius * s.radius;
+    float disc = b*b - 4*a*c;
+    if (disc &lt; 0) { *t1 = FLT_MAX; *t2 = FLT_MAX; return; }
+    float sq = sqrtf(disc);
+    *t1 = (-b + sq) / (2*a);
+    *t2 = (-b - sq) / (2*a);
+}
+
+// ---- Aydinlatma: Diffuse + Specular ----
+float ComputeLighting(Vec3 P, Vec3 N, Vec3 V, int spec)
+{
+    float i = 0.0f;
+    for (int li = 0; li &lt; LIGHT_COUNT; li++) {
+        if (lights[li].type == L_AMBIENT) {
+            i += lights[li].intensity;
+            continue;
+        }
+
+        Vec3 L = (lights[li].type == L_POINT)
+                 ? v_sub(lights[li].pos, P)
+                 : lights[li].dir;
+
+        // Diffuse
+        float ndl = v_dot(N, L);
+        if (ndl &gt; 0)
+            i += lights[li].intensity * ndl / (v_len(N) * v_len(L));
+
+        // Specular
+        if (spec != -1) {
+            // R = 2N(N·L) - L
+            Vec3 R = v_sub(v_scl(N, 2.0f * v_dot(N, L)), L);
+            float rdv = v_dot(R, V);
+            if (rdv &gt; 0) {
+                float factor = powf(rdv / (v_len(R) * v_len(V)), (float)spec);
+                i += lights[li].intensity * factor;
+            }
+        }
+    }
+    return i;
+}
+
+// ---- Isin Izleme ----
+Color TraceRay(Vec3 O, Vec3 D, float t_min, float t_max)
+{
+    float closest_t = FLT_MAX;
+    int idx = -1;
+
+    for (int i = 0; i &lt; SPHERE_COUNT; i++) {
+        float t1, t2;
+        IntersectRS(O, D, spheres[i], &amp;t1, &amp;t2);
+        if (t1 &gt;= t_min &amp;&amp; t1 &lt;= t_max &amp;&amp; t1 &lt; closest_t) { closest_t = t1; idx = i; }
+        if (t2 &gt;= t_min &amp;&amp; t2 &lt;= t_max &amp;&amp; t2 &lt; closest_t) { closest_t = t2; idx = i; }
+    }
+
+    if (idx == -1) return RAYWHITE;
+
+    Vec3 P = v_add(O, v_scl(D, closest_t));
+    Vec3 N = v_norm(v_sub(P, spheres[idx].center));
+    Vec3 V = v_scl(D, -1.0f);  // V = -D
+
+    float light = ComputeLighting(P, N, V, spheres[idx].specular);
+    if (light &gt; 1.0f) light = 1.0f;
+
+    unsigned char cr = (unsigned char)fminf(255, spheres[idx].r * light);
+    unsigned char cg = (unsigned char)fminf(255, spheres[idx].g * light);
+    unsigned char cb = (unsigned char)fminf(255, spheres[idx].b * light);
+    return (Color){cr, cg, cb, 255};
+}
+
+Vec3 CanvasToViewport(int cx, int cy, int cw, int ch)
+{
+    return (Vec3){ (float)cx/(float)cw, (float)cy/(float)ch, 1.0f };
+}
+
+int main(void)
+{
+    const int CW = 600, CH = 600;
+    InitWindow(CW, CH, "Ornek 06 - Specular Aydinlatma Raytracer");
+
+    Image img = GenImageColor(CW, CH, RAYWHITE);
+    Vec3 O = {0, 0, 0};
+
+    for (int x = -CW/2; x &lt; CW/2; x++) {
+        for (int y = -CH/2; y &lt; CH/2; y++) {
+            Vec3 D = CanvasToViewport(x, y, CW, CH);
+            Color c = TraceRay(O, D, 1.0f, FLT_MAX);
+            int sx = x + CW/2;
+            int sy = CH/2 - y;
+            if (sx &gt;= 0 &amp;&amp; sx &lt; CW &amp;&amp; sy &gt;= 0 &amp;&amp; sy &lt; CH)
+                ImageDrawPixel(&amp;img, sx, sy, c);
+        }
+    }
+
+    Texture2D tex = LoadTextureFromImage(img);
+    UnloadImage(img);
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+            DrawTexture(tex, 0, 0, WHITE);
+            DrawRectangle(0, 0, CW, 55, Fade(BLACK, 0.6f));
+            DrawText("Diffuse + Specular Aydinlatma", 10, 8, 22, WHITE);
+            DrawText("Kirmizi(s=500) Mavi(s=500) Yesil(s=10) Zemin(s=1000)",
+                     10, 33, 14, LIGHTGRAY);
+        EndDrawing();
+    }
+
+    UnloadTexture(tex);
+    CloseWindow();
+    return 0;
+}
+</code></pre>
+
+<h3>Bu Kod Ne Yapıyor?</h3>
+
+<p>Kod, bir sahnede küreler ve ışık kaynakları ile specular yansımanın nasıl çalıştığını gösteren bir ray tracing uygulamasıdır. Şimdi bu kodun bazı önemli kısımlarını inceleyelim:</p>
+
+<h4>Sphere Yapısına Eklenen Specular Alanı</h4>
+
+<p>Her bir küre, specular yansımayı tanımlayan bir specular alanına sahiptir. Bu alan, kürenin parlaklık derecesini temsil eder:</p>
+
+<pre><code class="language-c">
+typedef struct {
+    Vec3 center;
+    float radius;
+    unsigned char r, g, b;
+    int specular;  // -1 = mat, &gt;0 = parlak
+} Sphere;
+</code></pre>
+
+<h4>ComputeLighting'e Eklenen V ve Spec Parametreleri</h4>
+
+<p>ComputeLighting fonksiyonu, yüzeyin toplam aydınlatmasını hesaplarken specular yansıma terimini de dikkate alır. V parametresi, kameraya doğru yönü gösterir ve spec parametresi, specular yansımanın derecesini belirler:</p>
+
+<pre><code class="language-c">
+float ComputeLighting(Vec3 P, Vec3 N, Vec3 V, int spec)
+</code></pre>
+
+<h4>R Vektörü Hesabı: \( \vec{R} = 2\vec{N}(\vec{N} \cdot \vec{L}) - \vec{L} \)</h4>
+
+<p>R vektörü, ışık yönünün yüzey normaline göre simetrik yansımasıdır. Bu hesaplama, specular yansımanın yönünü belirler:</p>
+
+<pre><code class="language-c">
+Vec3 R = v_sub(v_scl(N, 2.0f * v_dot(N, L)), L);
+</code></pre>
+
+<h4>Specular Terim: \( \text{pow}(rdv / (v_{\text{len}}(R) * v_{\text{len}}(V)), spec) \)</h4>
+
+<p>Specular terim, R ve V vektörlerinin dot çarpımının normalize edilmiş halinin bir üs alma işlemi ile hesaplanır. Bu, specular ışığın yoğunluğunu belirler:</p>
+
+<pre><code class="language-c">
+float factor = powf(rdv / (v_len(R) * v_len(V)), (float)spec);
+</code></pre>
+
+<h4>V = -D (Kameraya Doğru Yön)</h4>
+
+<p>V, görüntüye doğru olan vektördür ve D'nin tersidir. Bu, yansıma yönünü hesaplamak için kullanılır:</p>
+
+<pre><code class="language-c">
+Vec3 V = v_scl(D, -1.0f);  // V = -D
+</code></pre>
+
+<div class="try-box">
+  <div class="box-title">🧪 Deneyin: Specular Aydınlatma</div>
+  Kodda kürelerin specular değerlerini değiştirin:
+  <ul>
+    <li>Kırmızı kürenin specular değerini 500 yerine 1000 yapın ve nasıl daha parlak bir etki yarattığını gözlemleyin.</li>
+    <li>Yeşil kürenin specular değerini 10 yerine 50 yapın - parlaklık nasıl değişiyor?</li>
+    <li>Zemin için specular değeri -1 yapın - specular yansıma kayboluyor mu?</li>
+  </ul>
+</div>
+
+<h2>Özet ve Sonraki Adımlar</h2>
+
+<p>Bu bölümde specular yansımanın temel kavramlarını öğrendik ve bir sahnede nasıl uygulanabileceğini gördük. Işık kaynakları ile birlikte diffuse ve specular yansımayı birleştirerek daha gerçekçi görüntüler elde ettik.</p>
+
+<p>Sonraki bölümde gölgeler ve yansımalar gibi diğer önemli efektlere odaklanacağız. Bu efektler, sahnenizdeki nesnelerin daha doğal ve üç boyutlu görünmesini sağlar.</p>
+    </main>
+    <nav class="chapter-nav">
+        <a href="02-diffuse-yansima.html" class="prev">Diffuse Yansıma</a>
+        
+    </nav>
+    <footer class="site-footer">
+        <p>Esinlenme kaynagi: <a href="https://gabrielgambetta.com/computer-graphics-from-scratch/" target="_blank">Computer Graphics from Scratch</a> &mdash; Gabriel Gambetta</p>
+    </footer>
+</body>
+</html>

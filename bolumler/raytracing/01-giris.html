@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Işın İzlemeye Giriş - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raytracing">Isin Izleme</a> &gt;
+        <span>Işın İzlemeye Giriş</span>
+    </nav>
+    <main class="chapter-content">
+<h2>Isin Izleme (Ray Tracing) Nedir?</h2>
+<p>Bilgisayar grafiklerinde, gercek dunyanin bir yansimasini olusturmak icin kullanilan bir yontem olan isin izleme (ray tracing), gercekci goruntuler elde etmenin en etkili yollarindan biridir. Bu yontem, gercek dunyada isigin nasil davrandigini taklit ederek, nesnelerin yuzeylerinden yansiyan isiklarin izini surerek goruntuler olusturur.</p>
+<p>Gelin, bunu daha somut bir sekilde anlatmak icin bir analoji kullanalim. Hayal edin ki guzel bir manzaranin resmini yapmak istiyoruz. Ancak resim yapma yetenegimiz yok. Bunun yerine, sistematik bir yontem kullaniyoruz: belirli bir bakis noktasi seciyoruz, onumuze izgarali (kareli) bir cerceve koyuyoruz ve her karedeki rengi belirleyip tuvale boyuyoruz. Aslinda bilgisayar grafiklerinde isin izleme tam olarak bu sekilde calisir.</p>
+
+<div class="figure"><img src="../../images/raytracing/figure-2-1.jpg" alt="Manzara"><div class="caption">Sekil 2-1: Resmetmek istedigimiz guzel bir manzara</div></div>
+
+<p>Bu izgarali cerceve, bilgisayar ekranindaki piksel matrisine benzetilebilir. Her piksel, manzaranin belirli bir bolgesini temsil eder ve bu bolgenin rengini belirleriz. Isin izleme, her piksel icin bir isin (ray) gonderir ve bu isin nesnelerle nasil etkilesime gectigini hesaplayarak o pikselin rengini belirler.</p>
+
+<div class="figure"><img src="../../images/raytracing/figure-2-2.png" alt="Cerceveden resim"><div class="caption">Sekil 2-2: Izgarali cerceveden bakarak sistematik sekilde resim yapma</div></div>
+
+<h2>Algoritma Olarak Ifade</h2>
+<p>Isin izleme algoritmasi, yukarida acikladigimiz analojiye dayanan bir surec izler. Bu sureci basit bir algoritma olarak ifade edebiliriz:</p>
+<ol>
+    <li><strong>Goz noktasini ve cerceveyi (viewport) yerlestir:</strong> Kamera ya da goz konumunu belirler ve ekranin ne kadarini gormek istedigimizi tanimlariz. Bu, sahnenin bakis acisini ayarlar.</li>
+    <li><strong>Her piksel icin viewport'taki kareyi bul:</strong> Ekrandaki her piksel icin, bir isin gondeririz. Bu isin, sahnedeki hangi nesnelerle etkilesime gectigini anlamaya calisiriz.</li>
+    <li><strong>O kareden gorunen rengi belirle:</strong> Isin, bir nesneye carptiginda, o nesnenin rengini ve isik kaynagindan nasil etkilendigini hesaplariz. Gerekirse, yansimalari ve golgeleri de dikkate aliriz.</li>
+    <li><strong>Pikseli boya:</strong> Elde ettigimiz renk degerini piksele uygulariz.</li>
+</ol>
+<p>Bu 4 adim, tum isin izleme algoritmasinin ozeti niteligindedir. Her adim, gercek dunyadaki isik etkilesimlerini simule etmeye yoneliktir.</p>
+
+<h2>Ters Yonde Isin Izleme</h2>
+<p>Gercek hayatta isik, isik kaynagindan cikar, nesnelerden seker ve sonunda gozumuze ulasir. Ancak bilgisayar grafiklerinde bu sureci dogrudan simule etmek cok pahali olabilir. Milyarlarca fotonun izlenmesi gerekir ve bunlarin cok az kismi gozumuze ulasir. Bu yuzden "tersten" dusunuyoruz: kameradan (gozden) isinlar gonderiyoruz ve bu isinlarin carptigi nesnelerin rengini aliyoruz. Bu sekilde hesaplama daha verimli hale gelir.</p>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Piksel Nedir?</div>
+<p>Piksel, "picture element" ifadesinin kisaltilmis halidir ve bir goruntunun en kucuk birimidir. Her piksel, belirli bir renk degerine sahiptir ve bu deger, goruntunun genel rengini olusturur. Ekranlar, milyonlarca pikselden olusur ve birlikte bir resmi ya da goruntuyu temsil eder.</p></div>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Rendering Nedir?</div>
+<p>Rendering, bir bilgisayar programinin, 3D modellerden veya sahnelerden iki boyutlu bir goruntu olusturma surecidir. Bu surec, isik ve golge hesaplamalariyla birlikte cisimlerin yuzeylerini renklendirir ve nihayetinde ekranda gorulen goruntuyu olusturur.</p></div>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Isin Izlemenin Kisa Tarihcesi</div>
+<p>Isin izleme, ilk olarak 1968 yilda Arthur Appel tarafindan tanitilmistir. Daha sonra, 1980 yillarinda Turner Whitted tarafindan gelistirilen recursive ray tracing (tekrarlayan isin izleme) teknigi ile, daha gercekci yansima ve golge efektleri elde edilmistir. Bu gelismeler, isin izlemenin modern bilgisayar grafiklerinde yaygin olarak kullanilmasina yol acmistir.</p></div>
+
+<h2>Raylib ile Ilk Adim</h2>
+<div class="raylib-box"><div class="box-title">🎮 Raylib: Tanitim</div>
+<p>Raylib, C dilinde yazilmis, basit ve kullanici dostu bir grafik kutuphanesidir. Oyun ve grafik uygulamalari gelistirmek icin tasarlanmistir. Raylib, ogretici ve eglenceli bir sekilde grafik programlamaya baslamak isteyenler icin idealdir.</p></div>
+
+<p>Asagida, Raylib kullanarak basit bir pencere olusturan ve piksel piksel cizim yapan bir ornek kod vardir. Bu kod, isin izlemenin temelini anlamamiz icin harika bir baslangic noktasi sunar.</p>
+
+<div class="code-filename">ornek01_temel_pencere.c</div>
+<pre><code class="language-c">#include "raylib.h"
+
+/*
+ * Ornek 01 - Temel Raylib Penceresi ve Piksel Cizimi
+ *
+ * Bu program raylib ile temel bir pencere olusturur ve
+ * piksel piksel cizim yapar. Isin izleme (ray tracing)
+ * de temelde ayni seyi yapar: her piksel icin bir renk
+ * hesaplar ve o pikseli boyar.
+ */
+int main(void)
+{
+    const int screenWidth = 800;
+    const int screenHeight = 600;
+
+    InitWindow(screenWidth, screenHeight, "Ornek 01 - Temel Raylib Penceresi");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            // Piksel piksel cizim ornegi - renk gradyani
+            for (int i = 0; i &lt; 100; i++)
+            {
+                for (int j = 0; j &lt; 100; j++)
+                {
+                    Color color = {
+                        (unsigned char)(i * 2.55f),
+                        (unsigned char)(j * 2.55f),
+                        128, 255
+                    };
+                    DrawPixel(350 + i, 250 + j, color);
+                }
+            }
+
+            DrawText("Merhaba Bilgisayar Grafikleri!", 250, 200, 24, DARKGRAY);
+            DrawText("Piksel piksel cizim ornegi (100x100)", 260, 380, 18, GRAY);
+        EndDrawing();
+    }
+
+    CloseWindow();
+    return 0;
+}
+</code></pre>
+
+<h3>Bu Kod Ne Yapiyor?</h3>
+<p>Simdi, bu kodun her bir parcasina daha yakindan bakalim ve ne yaptigini anlayalim:</p>
+
+<h4>InitWindow Fonksiyonu</h4>
+<p><strong>Bu satir ne yapiyor?</strong> <code>InitWindow(screenWidth, screenHeight, "Ornek 01 - Temel Raylib Penceresi");</code></p>
+<p>Bu fonksiyon, belirtilen genislik ve yukseklikte bir pencere olusturur ve penceredeki baslik metnini ayarlar. Burada, 800x600 boyutlarinda bir pencere olusturuyoruz.</p>
+
+<h4>SetTargetFPS Fonksiyonu</h4>
+<p><strong>Bu satir ne yapiyor?</strong> <code>SetTargetFPS(60);</code></p>
+<p>Bu satir, uygulamanin saniyede kac kare (frame) cizecegini belirler. Burada, 60 FPS (frame per second) yani saniyede 60 kare cizilecek sekilde ayarliyoruz.</p>
+
+<h4>WindowShouldClose Fonksiyonu</h4>
+<p><strong>Bu satir ne yapiyor?</strong> <code>while (!WindowShouldClose())</code></p>
+<p>Bu dongu, pencerenin kapatilmadigini kontrol eder. Kullanici pencereyi kapatana kadar bu dongu devam eder.</p>
+
+<h4>BeginDrawing ve EndDrawing Fonksiyonlari</h4>
+<p><strong>Bu satirlar ne yapiyor?</strong> <code>BeginDrawing(); ... EndDrawing();</code></p>
+<p>Bu fonksiyonlar, cizim dongusunun baslangic ve bitis noktalarini belirler. <code>BeginDrawing()</code>, cizime baslamak icin gerekli hazirliklari yapar ve <code>EndDrawing()</code>, cizimi tamamlar.</p>
+
+<h4>ClearBackground Fonksiyonu</h4>
+<p><strong>Bu satir ne yapiyor?</strong> <code>ClearBackground(RAYWHITE);</code></p>
+<p>Bu fonksiyon, arka plan rengini ayarlar ve her cizim dongusunun basinda arka plani temizler. Burada arka plan rengi RAYWHITE (beyaz) olarak ayarlanmistir.</p>
+
+<h4>DrawPixel Fonksiyonu</h4>
+<p><strong>Bu satir ne yapiyor?</strong> <code>DrawPixel(350 + i, 250 + j, color);</code></p>
+<p>Bu fonksiyon, belirli bir koordinata sahip pikseli belirtilen renkle cizer. Bu ornekte, bir renk gradyani olusturmak icin 100x100 piksel bir alan ciziyoruz.</p>
+
+<h4>CloseWindow Fonksiyonu</h4>
+<p><strong>Bu satir ne yapiyor?</strong> <code>CloseWindow();</code></p>
+<p>Bu fonksiyon, pencereyi kapatir ve kaynaklari serbest birakir.</p>
+
+<p><strong>DrawPixel fonksiyonunun isin izleme ile baglantisi:</strong> Isin izleyici de tam olarak bunu yapar - her piksel icin bir renk hesaplar ve o pikseli boyar. Yani her pikselin rengi, ekranda gorulecek nihai goruntuyu olusturur.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Piksel Konumlarini Degistirme</div>
+<p>Kodda, <code>DrawPixel(350 + i, 250 + j, color);</code> satirinda 350 ve 250 yerine farkli degerler deneyin. Pikselin konumunun nasil degistigini gozlemleyin. Ornegin, 350 yerine 400 ve 250 yerine 300 degerlerini deneyin ve piksellerin nasil kaydigini gorun.</p></div>
+    </main>
+    <nav class="chapter-nav">
+        
+        <a href="02-temel-varsayimlar.html" class="next">Temel Varsayımlar ve Viewport</a>
+    </nav>
+    <footer class="site-footer">
+        <p>Esinlenme kaynagi: <a href="https://gabrielgambetta.com/computer-graphics-from-scratch/" target="_blank">Computer Graphics from Scratch</a> &mdash; Gabriel Gambetta</p>
+    </footer>
+</body>
+</html>

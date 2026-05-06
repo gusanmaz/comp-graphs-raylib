@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Işık ve Aydınlatma - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raytracing">Isin Izleme</a> &gt;
+        <span>Işık ve Aydınlatma</span>
+    </nav>
+    <main class="chapter-content">
+<h2>1. Işık Nedir ve Neden Önemli?</h2>
+<p>Önceki bölümde küreleri çizdiğimizde, bu küreler düz renkli daireler gibi görünüyordu. Bu durumun nedeni, sahnede herhangi bir ışık modelinin olmamasıydı. Gerçek dünyada nesnelerin üç boyutlu görünmesini sağlayan şey ışıktır. Işık, gölge ve yansıma olmadan nesneler düz ve cansız görünür.</p>
+<p>Günlük yaşamda, etrafımızdaki her şeyi ışık sayesinde farklı şekillerde ve derinlikte algılarız. Işık, bir nesnenin yüzeyine çarptığında, yüzeyin özelliklerine bağlı olarak ya emilir, ya yansıtılır ya da saçılır. Bu etkileşimler sayesinde bir nesnenin dokusu, şekli ve derinliği hakkında bilgi sahibi oluruz.</p>
+<p>Işık olmadan, bir sahnedeki nesneler birbirinden ayırt edilemez hale gelir ve sadece düz renkler olarak görünürler. Bu nedenle, gerçekçi bir sahne oluşturmak için etkili bir ışık modeli kullanmak kritiktir.</p>
+
+<h2>2. Basitleştirici Varsayımlar</h2>
+<ul>
+    <li><strong>Tüm ışıklar beyaz olsun:</strong> Yani sadece bir yoğunluk değeri \( i \) kullanıyoruz. Gerçek dünyada, ışık renkli olabilir ve her renk kanalı (kırmızı, yeşil, mavi) için ayrı hesaplamalar yapılması gerekebilir. Ancak, işimizi basit tutmak için şu an sadece beyaz ışık kullanıyoruz.</li>
+    <li><strong>Atmosferi yok sayıyoruz:</strong> Gerçekte, uzaktaki ışıklar atmosferdeki parçacıklar nedeniyle daha soluk görünür. Biz bu etkiyi göz ardı ediyoruz. Bu, hesaplamaları basitleştirmek için yapılan bir varsayımdır.</li>
+</ul>
+<p>Bu varsayımlar, başlangıçta ışık hesaplamalarını anlamayı ve uygulamayı kolaylaştırır. Daha karmaşık modeller ve simülasyonlar için bu faktörler ilerleyen aşamalarda dikkate alınabilir.</p>
+
+<h2>3. Noktasal Işık Kaynakları (Point Lights)</h2>
+<p>Noktasal ışık kaynakları, sabit bir noktadan her yöne eşit miktarda ışık yayan kaynaklardır. Bu tür bir ışık kaynağı, bir ampul gibi düşünülebilir. Noktasal ışık kaynakları, konum (position) ve yoğunluk (intensity) ile tanımlanır.</p>
+<p>Her yüzey noktası için farklı bir ışık vektörü hesaplanır. Bu vektör, ışık kaynağının konumu \( Q \) ile yüzey noktası \( P \) arasındaki fark olarak tanımlanır:</p>
+<div class="math-box">
+    <div class="box-title">📐 Matematik Notu: Işık Vektörü</div>
+    \[
+    \vec{L} = Q - P
+    \]
+</div>
+<p>Bu vektör, ışığın hangi yönden geldiğini ifade eder ve her nokta için farklı bir yönü belirtir.</p>
+<div class="figure">
+    <img src="../../images/light/05-point-light.png" alt="Noktasal isik">
+    <div class="caption">Sekil 3-1: Noktasal ışık kaynağı - her noktaya farklı yön</div>
+</div>
+
+<h2>4. Yönlü Işık Kaynakları (Directional Lights)</h2>
+<p>Yönlü ışık kaynakları, sonsuz bir uzaklıktan gelen ve sabit bir yöne sahip olan ışıklardır. Bu tür bir ışık kaynağı, güneş gibi düşünülebilir. Güneş, Dünya ölçeğinde çok uzakta olduğu için ışınları neredeyse paralel olarak kabul edilir.</p>
+<p>Yönlü ışık kaynakları, yön (direction) ve yoğunluk (intensity) ile tanımlanır ve bir konuma sahip değildir. Tüm yüzey noktaları için aynı ışık vektörü \( \vec{L} \) kullanılır.</p>
+<div class="figure">
+    <img src="../../images/light/05-directional-light.png" alt="Yonlu isik">
+    <div class="caption">Sekil 3-2: Yönlü ışık kaynağı - tüm noktalara aynı yön</div>
+</div>
+
+<h2>5. Ortam Işığı (Ambient Light)</h2>
+<p>Gerçekte, ışık bir nesneye çarptığında, bir kısmı emilirken geri kalanı sahneye saçılır. Bu saçılan ışık, başka nesnelere çarpar ve tekrar saçılır. Bu fenomen, global illumination olarak bilinir ve tamamen simüle etmek oldukça karmaşıktır.</p>
+<p>Bu karmaşıklığı basitleştirmek için, sahneye sabit bir miktar ışık eklemek amacıyla ortam ışığı (ambient light) kullanılır. Ortam ışığı, sahnenin her noktasına eşit miktarda ışık ekler ve yalnızca bir yoğunluk değeri ile tanımlanır. Konum veya yönü yoktur.</p>
+<p>Genellikle, bir sahnede yalnızca bir ambient ışık yeterlidir. Örneğin, bir sahnede ambient ışık 0.2, noktasal ışık 0.6 ve yönlü ışık 0.2 olduğunda toplamda 1.0 yoğunluğunda bir ışık elde ederiz.</p>
+
+<h2>6. Işık Türleri Özet Tablosu</h2>
+<table>
+    <tr>
+        <th>Tür</th>
+        <th>Konum</th>
+        <th>Yön</th>
+        <th>Kullanım Alanı</th>
+    </tr>
+    <tr>
+        <td>Noktasal Işık</td>
+        <td>Var</td>
+        <td>Her yöne</td>
+        <td>Ampuller, lambalar</td>
+    </tr>
+    <tr>
+        <td>Yönlü Işık</td>
+        <td>Yok</td>
+        <td>Sabit</td>
+        <td>Güneş ışığı</td>
+    </tr>
+    <tr>
+        <td>Ortam Işığı</td>
+        <td>Yok</td>
+        <td>Yok</td>
+        <td>Her sahneye genel ışık</td>
+    </tr>
+</table>
+
+<h2>7. Ekstra Bilgiler</h2>
+<div class="info-box">
+    <div class="box-title">ℹ️ Bilgi: Işık Yoğunluğu ve Global Illumination</div>
+    <ul>
+        <li><strong>Işık yoğunluğu (intensity):</strong> Işığın ne kadar parlak olduğunu belirten bir değerdir ve genellikle 0 ile 1 arasında bir değer alır. 0, hiç ışık yokken 1, maksimum parlaklığı temsil eder.</li>
+        <li><strong>Neden yoğunluklar toplamı 1.0?</strong> Toplam yoğunluğun 1.0 olması, aşırı parlaklık (overexposure) sorununu önlemek içindir. Böylece sahne aşırı parlak olmaz ve detaylar korunur.</li>
+        <li><strong>Global illumination:</strong> Işığın sahnede çok sayıda kez yansıması ve saçılmasıyla oluşan karmaşık aydınlatma modeli. Gerçekçi görsel efektler için önemlidir ancak hesaplaması zordur.</li>
+    </ul>
+</div>
+
+<div class="try-box">
+    <div class="box-title">🧪 Deneyin: Işık Kaynaklarının Etkisini İnceleyin</div>
+    <ul>
+        <li>Kodda bir noktasal ışık kaynağı ekleyin ve yoğunluğunu 0.5 olarak ayarlayın. Farklı konumlara taşıyın ve sahnedeki etkisini gözlemleyin.</li>
+        <li>Yönlü ışığın yönünü değiştirin ve sahnedeki gölgelerin nasıl değiştiğini inceleyin.</li>
+        <li>Ortam ışığını 0.1'e düşürün ve sahnenin genel parlaklığının nasıl değiştiğini gözlemleyin.</li>
+    </ul>
+</div>
+    </main>
+    <nav class="chapter-nav">
+        <a href="../raytracing/05-ilk-kurelerimiz.html" class="prev">İlk Kürelerimizi Çizdirmek</a>
+        <a href="02-diffuse-yansima.html" class="next">Diffuse Yansıma</a>
+    </nav>
+    <footer class="site-footer">
+        <p>Esinlenme kaynagi: <a href="https://gabrielgambetta.com/computer-graphics-from-scratch/" target="_blank">Computer Graphics from Scratch</a> &mdash; Gabriel Gambetta</p>
+    </footer>
+</body>
+</html>
