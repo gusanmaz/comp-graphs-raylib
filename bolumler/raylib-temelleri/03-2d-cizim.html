@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Çizim ve Şekiller - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>2D Çizim ve Şekiller</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>Ekran Koordinat Sistemi</h2>
+
+<p>Raylib'de 2D çizimde koordinat sistemi şöyle çalışır:</p>
+<ul>
+<li><strong>(0, 0)</strong> ekranın <strong>sol üst köşesidir</strong></li>
+<li><strong>X</strong> sağa doğru artar</li>
+<li><strong>Y aşağı doğru artar</strong> (matematik derslerindeki Y yukarı doğru artar — burada TAM TERSİ!)</li>
+<li>Birim: piksel</li>
+</ul>
+
+<div class="warning-box"><div class="box-title">⚠️ Dikkat: Y Ekseni Ters!</div>
+<p>Ekran koordinatlarında Y aşağı artar. Yani <code>y = 0</code> en üst, <code>y = 599</code> en alttır (600 piksellik pencerede). Bu başlangıçta kafa karıştırıcı olabilir ama tüm grafik API'lerinde böyledir.</p>
+</div>
+
+<h2>Dikdörtgenler</h2>
+
+<pre><code class="language-c">// En basit: x, y, genislik, yukseklik, renk
+DrawRectangle(50, 100, 200, 80, RED);
+
+// Vector2 ile
+DrawRectangleV((Vector2){50, 100}, (Vector2){200, 80}, RED);
+
+// Rectangle struct ile
+Rectangle kutu = { 50, 100, 200, 80 };
+DrawRectangleRec(kutu, RED);
+
+// Sadece kenarlar
+DrawRectangleLines(50, 100, 200, 80, BLUE);
+DrawRectangleLinesEx(kutu, 3.0f, BLUE);  // 3 piksel kalinlik
+
+// Yuvarlatilmis koseler
+DrawRectangleRounded(kutu, 0.3f, 4, GREEN);
+// 0.3f = yuvarlatma orani (0=kose, 1=tamamen yuvarlak)
+// 4 = segment sayisi (kalite)
+
+// Renk gecisi (gradient)
+DrawRectangleGradientH(50, 200, 200, 50, RED, BLUE);  // yatay
+DrawRectangleGradientV(50, 260, 200, 50, RED, BLUE);  // dikey</code></pre>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Rounded Değeri</div>
+<p><code>DrawRectangleRounded</code>'da <code>0.3f</code> değerini <code>0.0f</code> (keskin köşe) ve <code>1.0f</code> (tamamen yuvarlak) yaparak farkı görün.</p>
+</div>
+
+<h2>Daireler</h2>
+
+<pre><code class="language-c">// Merkez (x,y), yaricap, renk
+DrawCircle(200, 300, 50, BLUE);
+
+// Vector2 ile
+DrawCircleV((Vector2){200, 300}, 50, BLUE);
+
+// Sadece kenar
+DrawCircleLines(200, 300, 50, DARKBLUE);
+
+// Pasta dilimi (sector)
+DrawCircleSector((Vector2){400, 300}, 60, 0, 120, 16, ORANGE);
+// baslangic acisi=0, bitis=120 derece, 16 segment
+
+// Halka (ring)
+DrawRing((Vector2){600, 300}, 30, 50, 0, 270, 16, PURPLE);
+// ic yaricap=30, dis yaricap=50</code></pre>
+
+<h2>Çizgiler</h2>
+
+<pre><code class="language-c">// Basit cizgi
+DrawLine(10, 10, 200, 150, RED);
+
+// Vector2 ile
+DrawLineV((Vector2){10,10}, (Vector2){200,150}, RED);
+
+// Kalinlik ayarli
+DrawLineEx((Vector2){10,10}, (Vector2){200,150}, 3.0f, BLUE);
+
+// Bezier egrisi (yumusak egri)
+DrawLineBezier((Vector2){50, 400}, (Vector2){350, 350}, 2.0f, DARKGREEN);</code></pre>
+
+<h2>Üçgen ve Poligon</h2>
+
+<pre><code class="language-c">// Ucgen: 3 kose noktasi (saat yonunde!)
+DrawTriangle(
+    (Vector2){100, 300},  // ust
+    (Vector2){50, 400},   // sol alt
+    (Vector2){150, 400},  // sag alt
+    GOLD
+);
+
+// Duzgun poligon: merkez, kenar sayisi, yaricap, donme, renk
+DrawPoly((Vector2){300, 350}, 6, 40, 0, VIOLET);   // altigen
+DrawPoly((Vector2){450, 350}, 5, 40, 0, SKYBLUE);  // besgen
+DrawPoly((Vector2){600, 350}, 8, 40, 0, ORANGE);   // sekizgen</code></pre>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Kenar Sayısı</div>
+<p><code>DrawPoly</code>'daki kenar sayısını 3 (üçgen), 4 (kare), 12 (neredeyse daire), 32 (daire gibi) yaparak şeklin nasıl değiştiğini gözlemleyin.</p>
+</div>
+
+<h2>Yazı (Text)</h2>
+
+<pre><code class="language-c">// Basit yazi
+DrawText("Merhaba Dunya!", 100, 50, 20, DARKGRAY);
+// metin, x, y, font boyutu, renk
+
+// Degisken gosterme
+int skor = 42;
+DrawText(TextFormat("Skor: %d", skor), 100, 80, 20, RED);
+// %d = int, %.2f = 2 ondalik float, %s = string
+
+// Yazi genisligi olcme (merkezleme icin)
+const char *metin = "Ortala Beni";
+int genislik = MeasureText(metin, 24);
+DrawText(metin, (800 - genislik) / 2, 200, 24, BLACK);
+// (800 - genislik) / 2 = yatay merkez</code></pre>
+
+<h2>Doku (Texture)</h2>
+
+<pre><code class="language-c">// Dosyadan yukleme
+Texture2D resim = LoadTexture("karakter.png");  // baslatmada 1 kez
+DrawTexture(resim, 100, 100, WHITE);            // her karede ciz
+UnloadTexture(resim);                           // cikiste temizle
+
+// Procedural (kod ile) olusturma
+Image img = GenImageChecked(64, 64, 8, 8, ORANGE, WHITE);
+Texture2D doku = LoadTextureFromImage(img);
+UnloadImage(img);  // Image CPU'da, artik gerekmez
+// doku GPU'da yasayor - cizerken kullaniyoruz</code></pre>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Image vs Texture2D</div>
+<p><code>Image</code> = CPU belleğinde (RAM). Piksel piksel düzenleyebilirsiniz.<br>
+<code>Texture2D</code> = GPU belleğinde (VRAM). Çizmek için gerekli.<br>
+Akış: dosya → Image → Texture2D → çiz. Image işiniz bittikten sonra <code>UnloadImage</code> ile silebilirsiniz.</p>
+</div>
+
+<h2>Çarpışma Testi (Collision)</h2>
+
+<pre><code class="language-c">Rectangle kutu1 = { 100, 100, 50, 50 };
+Rectangle kutu2 = { 130, 120, 60, 40 };
+
+// Iki dikdortgen carpisiyor mu?
+if (CheckCollisionRecs(kutu1, kutu2)) {
+    DrawText("CARPISMA!", 100, 50, 20, RED);
+}
+
+// Daire + dikdortgen
+Vector2 daireMerkez = { 200, 200 };
+float daireR = 25;
+if (CheckCollisionCircleRec(daireMerkez, daireR, kutu1)) { ... }
+
+// Nokta + dikdortgen (fare tiklama icin ideal)
+Vector2 fare = GetMousePosition();
+if (CheckCollisionPointRec(fare, kutu1)) {
+    // fare kutunun uzerinde!
+}</code></pre>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Fare ile Çarpışma</div>
+<p>Fare konumunu bir daire olarak kullanın ve <code>CheckCollisionCircleRec</code> ile bir kutuya çarptığında rengini değiştirin. Bu, buton yapmanın temel mantığıdır!</p>
+</div>
+
+<h2>Örnek Kod</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek09_2d_cizim.c</div>
+<p>Tüm 2D çizim fonksiyonlarını tek ekranda gösterir. Fare ile çarpışma testi yapar.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+#include &lt;math.h&gt;
+
+int main(void)
+{
+    const int W = 950, H = 650;
+    InitWindow(W, H, "Ornek 09 - 2D Cizim");
+    SetTargetFPS(60);
+    int frame = 0;
+
+    Vector2 dairePos = { 700.0f, 500.0f };
+    float daireR = 30.0f;
+    Rectangle sabitKutu = { 600, 460, 120, 80 };
+    bool carpisiyor = false;
+
+    Image img = GenImageChecked(64, 64, 8, 8, ORANGE, WHITE);
+    Texture2D doku = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+    while (!WindowShouldClose())
+    {
+        frame++;
+        float t = frame * 0.03f;
+        dairePos = GetMousePosition();
+        carpisiyor = CheckCollisionCircleRec(dairePos, daireR, sabitKutu);
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        // Dikdortgenler
+        DrawRectangle(20, 80, 80, 50, RED);
+        DrawRectangleRounded((Rectangle){220, 80, 80, 50}, 0.3f, 4, GREEN);
+        DrawRectangleGradientH(320, 80, 80, 50, SKYBLUE, DARKPURPLE);
+
+        // Daireler
+        DrawCircle(60, 220, 30, MAROON);
+        DrawCircleSector((Vector2){260, 220}, 30, 0, 120 + sinf(t)*60, 16, ORANGE);
+
+        // Poligon (donuyor)
+        DrawPoly((Vector2){180, 450}, 6, 35, t * 30, VIOLET);
+
+        // Doku
+        DrawTexture(doku, 450, 215, WHITE);
+        DrawTextureEx(doku, (Vector2){550, 215}, sinf(t)*15, 1.5f, SKYBLUE);
+
+        // Carpisma testi
+        Color kRenk = carpisiyor ? RED : Fade(SKYBLUE, 0.5f);
+        DrawRectangleRec(sabitKutu, kRenk);
+        DrawCircleV(dairePos, daireR, Fade(carpisiyor ? RED : GREEN, 0.6f));
+        if (carpisiyor) DrawText("CARPISMA!", 620, 555, 20, RED);
+
+        EndDrawing();
+    }
+    UnloadTexture(doku);
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Önemli Satırlar</h3>
+
+<h4><code>GenImageChecked(64, 64, 8, 8, ORANGE, WHITE)</code></h4>
+<p>64x64 piksellik bir dama tahtası deseni oluşturur. Her kare 8x8 piksel. Dosya yüklemeden doku oluşturmanın en kolay yolu.</p>
+
+<h4><code>CheckCollisionCircleRec(dairePos, daireR, sabitKutu)</code></h4>
+<p>Dairenin kutunun içine girip girmediğini kontrol eder. <code>true</code> dönerse çarpışma var — rengi kırmızıya çeviriyoruz.</p>
+
+<h4><code>sinf(t) * 60</code></h4>
+<p>Sinüs fonksiyonu -1 ile 1 arası salınım yapar. <code>* 60</code> ile -60..+60 arası değer elde ederiz. Bunu açıya ekleyerek pasta dilimini canlandırıyoruz.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Doku Döndürme Hızı</div>
+<p><code>sinf(t)*15</code> ifadesindeki <code>15</code> değerini <code>45</code> veya <code>90</code> yapın — doku çok daha çılgınca döner!</p>
+</div>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="02-girdi-isleme.html" class="prev">Girdi İşleme</a>
+        <a href="04-2d-kamera.html" class="next">2D Kamera ve Dünya</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>

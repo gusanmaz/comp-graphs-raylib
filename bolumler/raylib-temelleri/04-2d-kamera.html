@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Kamera ve Dünya - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>2D Kamera ve Dünya</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>Neden Kamera Lazım?</h2>
+
+<p>Pencereniz 900×600 piksel. Ama dünyanız 10.000×10.000 birim olabilir — bir şehir, bir harita, devasa bir seviye. Tamamını aynı anda gösteremezsiniz. <strong>Kamera</strong>, bu büyük dünyanın sadece bir kısmını pencerede gösteren "penceredir".</p>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Dünya vs Ekran Koordinatları</div>
+<p><strong>Dünya koordinatları:</strong> Nesnelerin gerçek konumu (x=5000 olabilir).<br>
+<strong>Ekran koordinatları:</strong> Pikseller (0..899, 0..599).<br>
+Kamera bu dönüşümü yapar: dünya koordinatını alır, ekranda nereye düşeceğini hesaplar.</p>
+</div>
+
+<h2>Camera2D Yapısı</h2>
+
+<pre><code class="language-c">Camera2D kamera = { 0 };  // tum alanlari sifirla
+
+kamera.target = (Vector2){ 500, 300 };   // dunya noktasi
+kamera.offset = (Vector2){ 450, 300 };   // ekran pikseli
+kamera.rotation = 0.0f;                  // derece
+kamera.zoom = 1.0f;                      // carpan</code></pre>
+
+<h3>target — Kameranın Baktığı Dünya Noktası</h3>
+<p>Dünya koordinatlarında bir nokta. Kamera bu noktayı "takip eder". Genelde oyuncunun merkezi buraya atanır.</p>
+
+<h3>offset — Bu Noktanın Ekranda Düşeceği Yer</h3>
+<p>Piksel cinsinden. Genelde ekranın ortası: <code>{ekranGenislik/2, ekranYukseklik/2}</code>. Bu sayede target noktası ekranın tam ortasında görünür.</p>
+
+<h3>zoom — Yakınlaştırma</h3>
+<p><code>1.0</code> = normal, <code>2.0</code> = 2x yakın (nesneler büyük), <code>0.5</code> = uzak (nesneler küçük, daha geniş alan görünür).</p>
+
+<h3>rotation — Döndürme</h3>
+<p>Derece cinsinden. <code>45</code> = dünya 45° döndürülmüş görünür.</p>
+
+<h2>BeginMode2D / EndMode2D</h2>
+
+<p>Bu blok içindeki çizimler <strong>dünya koordinatlarında</strong> yapılır — kamera onları ekrana taşır. Blok dışındaki çizimler <strong>ekran koordinatlarında</strong> yapılır (UI için).</p>
+
+<pre><code class="language-c">BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    BeginMode2D(kamera);
+        // --- DUNYA KOORDINATLARI ---
+        // Buradaki x=5000 bile olsa kamera dogru yere cizer
+        DrawRectangle(5000, 200, 100, 100, RED);
+        DrawCircle(-3000, 100, 50, BLUE);
+    EndMode2D();
+
+    // --- EKRAN KOORDINATLARI (UI) ---
+    // Skor tablosu, saglik barı vs. burada
+    DrawText("Skor: 42", 10, 10, 20, BLACK);
+EndDrawing();</code></pre>
+
+<div class="warning-box"><div class="box-title">⚠️ Dikkat: UI'yı Mode2D İçinde Çizmeyin!</div>
+<p>Mode2D içindeki çizimler kamerayla birlikte hareket eder. Skor tablosu veya buton gibi sabit kalması gereken şeyleri <strong>EndMode2D'den sonra</strong> çizin.</p>
+</div>
+
+<h2>Dünya-Ekran Dönüşümleri</h2>
+
+<pre><code class="language-c">// Fare ekran pikselinden dunya koordinatina
+Vector2 fareDunya = GetScreenToWorld2D(GetMousePosition(), kamera);
+
+// Dunya noktasindan ekran pikseline
+Vector2 ekranPos = GetWorldToScreen2D((Vector2){5000, 200}, kamera);</code></pre>
+
+<p>Bu fonksiyonlar kritiktir: fare tıklamasının dünyada <em>nereye</em> denk geldiğini bulmak için <code>GetScreenToWorld2D</code> kullanırsınız.</p>
+
+<h2>Örnek Kod: 2D Şehir ve Kamera</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek10_2d_kamera.c</div>
+<p>WASD ile oyuncuyu taşıyın, kamera takip eder. Q/E ile döndürün, tekerlek ile zoom yapın.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+
+#define BINA_SAYISI 50
+
+int main(void)
+{
+    const int W = 900, H = 600;
+    InitWindow(W, H, "Ornek 10 - 2D Kamera");
+    SetTargetFPS(60);
+
+    Rectangle oyuncu = { 400, 280, 30, 50 };
+    float oyuncuHiz = 5.0f;
+
+    // Rastgele binalar olustur
+    Rectangle binalar[BINA_SAYISI];
+    Color binaRenkleri[BINA_SAYISI];
+    int ofs = 0;
+    for (int i = 0; i &lt; BINA_SAYISI; i++) {
+        int en = GetRandomValue(60, 160);
+        int boy = GetRandomValue(80, 350);
+        binalar[i] = (Rectangle){ ofs - 4000, H - 100 - boy, en, boy };
+        binaRenkleri[i] = (Color){
+            GetRandomValue(120,250),
+            GetRandomValue(120,250),
+            GetRandomValue(120,250), 255 };
+        ofs += en + GetRandomValue(2, 12);
+    }
+
+    // Kamera ayarla
+    Camera2D kamera = { 0 };
+    kamera.target = (Vector2){ oyuncu.x + 15, oyuncu.y + 25 };
+    kamera.offset = (Vector2){ W/2.0f, H/2.0f };
+    kamera.zoom = 1.0f;
+
+    while (!WindowShouldClose())
+    {
+        // Oyuncu hareketi (DUNYA koordinatlarinda)
+        if (IsKeyDown(KEY_D)) oyuncu.x += oyuncuHiz;
+        if (IsKeyDown(KEY_A)) oyuncu.x -= oyuncuHiz;
+        if (IsKeyDown(KEY_W)) oyuncu.y -= oyuncuHiz;
+        if (IsKeyDown(KEY_S)) oyuncu.y += oyuncuHiz;
+
+        // Kamera: oyuncuyu takip et
+        kamera.target = (Vector2){ oyuncu.x + 15, oyuncu.y + 25 };
+
+        // Kamera donme ve zoom
+        if (IsKeyDown(KEY_Q)) kamera.rotation -= 1.5f;
+        if (IsKeyDown(KEY_E)) kamera.rotation += 1.5f;
+        if (IsKeyPressed(KEY_R)) kamera.rotation = 0;
+        kamera.zoom += GetMouseWheelMove() * 0.15f;
+        if (kamera.zoom &lt; 0.2f) kamera.zoom = 0.2f;
+        if (kamera.zoom &gt; 5.0f) kamera.zoom = 5.0f;
+
+        BeginDrawing();
+            ClearBackground((Color){200, 220, 240, 255});
+
+            BeginMode2D(kamera);
+                // Zemin
+                DrawRectangle(-5000, H-100, 10000, 200, DARKGREEN);
+                // Binalar
+                for (int i = 0; i &lt; BINA_SAYISI; i++)
+                    DrawRectangleRec(binalar[i], binaRenkleri[i]);
+                // Oyuncu
+                DrawRectangleRec(oyuncu, RED);
+            EndMode2D();
+
+            // UI (ekran koordinatlarinda - kameradan bagimsiz)
+            DrawText(TextFormat("Zoom: %.2f", kamera.zoom), 10, 10, 16, BLACK);
+
+            // Fare dunya koordinati
+            Vector2 fd = GetScreenToWorld2D(GetMousePosition(), kamera);
+            DrawText(TextFormat("Dunya: (%.0f, %.0f)", fd.x, fd.y), 10, 30, 14, GRAY);
+        EndDrawing();
+    }
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Önemli Noktalar</h3>
+
+<h4><code>kamera.target = oyuncu merkezi</code></h4>
+<p>Her karede kameranın hedefini oyuncuya eşitliyoruz. Bu sayede oyuncu hareket ettikçe kamera onu takip eder.</p>
+
+<h4><code>kamera.offset = { W/2, H/2 }</code></h4>
+<p>Target noktasının ekranın TAM ORTASINDA görünmesini sağlar. Eğer <code>{0, 0}</code> yaparsanız, oyuncu sol üst köşede kalır.</p>
+
+<h4><code>GetScreenToWorld2D</code></h4>
+<p>Fare piksel koordinatını dünya koordinatına çevirir. Kameranın zoom ve rotation'ını hesaba katar.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Offset'i Değiştirin</div>
+<p><code>kamera.offset</code>'i <code>(Vector2){0, 0}</code> yapın. Oyuncu artık ekranın sol üst köşesinde — çünkü target noktası (0,0) pikselinde gösterilir.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Zoom Başlangıcı</div>
+<p><code>kamera.zoom = 0.3f;</code> ile başlayın — tüm şehir görünür. <code>3.0f</code> ile başlayın — sadece yakın bölge.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Yumuşak Takip</div>
+<p>Direkt atama yerine: <code>kamera.target.x += (oyuncu.x - kamera.target.x) * 0.05f;</code> — kamera yavaşça yakalar (smooth follow).</p>
+</div>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="03-2d-cizim.html" class="prev">2D Çizim</a>
+        <a href="05-3d-temel.html" class="next">3D Temel Kavramlar</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>

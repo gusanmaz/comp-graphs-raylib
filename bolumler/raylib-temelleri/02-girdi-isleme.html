@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Girdi İşleme - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>Girdi İşleme</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>Kullanıcıdan Girdi Almak</h2>
+
+<p>Bir programın interaktif olması için kullanıcıdan girdi (input) alması gerekir. Raylib'de girdi işleme çok basittir: her karede "şu tuş basılı mı?" diye sorarsınız. Buna <strong>polling</strong> (sorgulama) yöntemi denir.</p>
+
+<h3>Klavye Fonksiyonları</h3>
+
+<p>Raylib'de 4 temel klavye fonksiyonu var. Aralarındaki fark çok önemli:</p>
+
+<table>
+<tr><th>Fonksiyon</th><th>Ne Zaman true?</th><th>Kullanım Alanı</th></tr>
+<tr><td><code>IsKeyPressed(tus)</code></td><td>Tuşa ilk basıldığı <strong>tek karede</strong></td><td>Ateş etme, menü seçimi, zıplama</td></tr>
+<tr><td><code>IsKeyDown(tus)</code></td><td>Tuş <strong>basılı tutulduğu sürece</strong> her kare</td><td>Sürekli hareket, koşma</td></tr>
+<tr><td><code>IsKeyReleased(tus)</code></td><td>Tuş <strong>bırakıldığı tek karede</strong></td><td>Ok bırakma, şarj bitirme</td></tr>
+<tr><td><code>IsKeyUp(tus)</code></td><td>Tuş basılı <strong>olmadığı</strong> sürece</td><td>Nadir kullanılır</td></tr>
+</table>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Pressed vs Down Farkı</div>
+<p>Düşünün: SPACE tuşuna 1 saniye basılı tutuyorsunuz (60 FPS'de 60 kare). <code>IsKeyPressed</code> sadece ilk karede <code>true</code> döner. <code>IsKeyDown</code> ise 60 kerede de <code>true</code> döner. Hareket için <code>Down</code>, tek seferlik eylem için <code>Pressed</code> kullanın.</p>
+</div>
+
+<h3>Tuş Kodları</h3>
+
+<p>Sık kullanılan tuş sabitleri:</p>
+
+<ul>
+<li><code>KEY_A</code> - <code>KEY_Z</code> — harfler</li>
+<li><code>KEY_ZERO</code> - <code>KEY_NINE</code> — rakamlar</li>
+<li><code>KEY_SPACE</code>, <code>KEY_ENTER</code>, <code>KEY_ESCAPE</code></li>
+<li><code>KEY_UP</code>, <code>KEY_DOWN</code>, <code>KEY_LEFT</code>, <code>KEY_RIGHT</code> — ok tuşları</li>
+<li><code>KEY_LEFT_SHIFT</code>, <code>KEY_LEFT_CONTROL</code></li>
+</ul>
+
+<h3>Tipik Hareket Kodu</h3>
+
+<pre><code class="language-c">// Her karede kontrol: tus basili mi?
+if (IsKeyDown(KEY_RIGHT)) konum.x += hiz;
+if (IsKeyDown(KEY_LEFT))  konum.x -= hiz;
+if (IsKeyDown(KEY_DOWN))  konum.y += hiz;
+if (IsKeyDown(KEY_UP))    konum.y -= hiz;</code></pre>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: IsKeyDown → IsKeyPressed</div>
+<p>Yukarıdaki kodda <code>IsKeyDown</code> yerine <code>IsKeyPressed</code> yazın. Tuşa basılı tuttuğunuzda nesne sadece 1 piksel hareket eder — çünkü sadece ilk kare sayılır. Farkı hissedin!</p>
+</div>
+
+<h2>Fare Girdisi</h2>
+
+<h3>Fare Konumu</h3>
+
+<pre><code class="language-c">Vector2 fare = GetMousePosition();  // x ve y pixel koordinati
+int fx = GetMouseX();  // sadece x
+int fy = GetMouseY();  // sadece y</code></pre>
+
+<h3>Fare Butonları</h3>
+
+<pre><code class="language-c">// Ayni mantik: Pressed, Down, Released
+if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))  { /* tek tikla */ }
+if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))     { /* basili tut */ }
+if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) { /* birakildi */ }</code></pre>
+
+<p>Buton sabitleri: <code>MOUSE_BUTTON_LEFT</code>, <code>MOUSE_BUTTON_RIGHT</code>, <code>MOUSE_BUTTON_MIDDLE</code></p>
+
+<h3>Fare Tekerleği</h3>
+
+<pre><code class="language-c">float tekerlek = GetMouseWheelMove();
+// yukari cevirince +1, asagi cevirince -1, hareketsizse 0
+// Zoom icin ideal:
+zoom += tekerlek * 0.1f;</code></pre>
+
+<h2>Gamepad (Kısa)</h2>
+
+<pre><code class="language-c">if (IsGamepadAvailable(0)) {  // 0 = ilk gamepad
+    if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) {
+        // Xbox A, PS X butonu
+    }
+    float solX = GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X); // -1..+1
+}</code></pre>
+
+<h2>Örnek Kod: Girdi Demosu</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek08_girdi_isleme.c</div>
+<p>Kutuyu WASD/oklar ile taşıyın, SPACE ile renk değiştirin, fare ile çizin.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+
+int main(void)
+{
+    const int W = 900, H = 650;
+    InitWindow(W, H, "Ornek 08 - Girdi Isleme");
+    SetTargetFPS(60);
+
+    Vector2 kutuPos = { 400.0f, 300.0f };
+    float kutuBoyut = 40.0f;
+    Color kutuRenk = BLUE;
+    float kutuHiz = 4.0f;
+
+    Vector2 noktalar[1024];
+    int noktaSayisi = 0;
+    float zoom = 1.0f;
+
+    while (!WindowShouldClose())
+    {
+        // Klavye: basili tutma = surekli hareket
+        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) kutuPos.x += kutuHiz;
+        if (IsKeyDown(KEY_LEFT)  || IsKeyDown(KEY_A)) kutuPos.x -= kutuHiz;
+        if (IsKeyDown(KEY_DOWN)  || IsKeyDown(KEY_S)) kutuPos.y += kutuHiz;
+        if (IsKeyDown(KEY_UP)    || IsKeyDown(KEY_W)) kutuPos.y -= kutuHiz;
+
+        // Klavye: tek basilma = bir kez tetikleme
+        if (IsKeyPressed(KEY_SPACE)) {
+            kutuRenk = (Color){ GetRandomValue(50,255),
+                                GetRandomValue(50,255),
+                                GetRandomValue(50,255), 255 };
+        }
+
+        // Sinir kontrolu
+        if (kutuPos.x &lt; 0) kutuPos.x = 0;
+        if (kutuPos.y &lt; 0) kutuPos.y = 0;
+        if (kutuPos.x &gt; W - kutuBoyut) kutuPos.x = W - kutuBoyut;
+        if (kutuPos.y &gt; H - kutuBoyut) kutuPos.y = H - kutuBoyut;
+
+        // Fare: sol buton basili tutulursa ciz
+        Vector2 farePos = GetMousePosition();
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) &amp;&amp; noktaSayisi &lt; 1024) {
+            noktalar[noktaSayisi] = farePos;
+            noktaSayisi++;
+        }
+
+        // Fare tekerlegi: zoom
+        zoom += GetMouseWheelMove() * 0.1f;
+        if (zoom &lt; 0.2f) zoom = 0.2f;
+        if (zoom &gt; 3.0f) zoom = 3.0f;
+
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            // Kutu (zoom ile boyutu degisir)
+            float boyut = kutuBoyut * zoom;
+            DrawRectangle((int)kutuPos.x, (int)kutuPos.y,
+                          (int)boyut, (int)boyut, kutuRenk);
+
+            // Fare ile cizilen noktalar
+            for (int i = 0; i &lt; noktaSayisi; i++) {
+                DrawCircleV(noktalar[i], 3.0f, RED);
+                if (i &gt; 0) DrawLineV(noktalar[i-1], noktalar[i], Fade(RED, 0.4f));
+            }
+        EndDrawing();
+    }
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Önemli Satırların Açıklaması</h3>
+
+<h4><code>Vector2 noktalar[1024];</code></h4>
+<p><strong>Dizi (array)</strong> kavramı: 1024 adet Vector2 tutabilen bir kutu. <code>noktalar[0]</code> ilk eleman, <code>noktalar[1023]</code> son eleman. C'de dizi boyutunu baştan belirtmeniz gerekir — bu yüzden 1024 gibi "yeterince büyük" bir sayı seçiyoruz.</p>
+
+<h4><code>GetRandomValue(50, 255)</code></h4>
+<p>50 ile 255 arasında rastgele tam sayı üretir. Her SPACE basışında farklı bir renk oluşur.</p>
+
+<h4><code>IsMouseButtonDown</code> ile çizim</h4>
+<p><code>Down</code> kullandığımız için fare sol tuşu basılı tutulduğu sürece her karede yeni bir nokta eklenir. Bu da çizgi çizme efekti yaratır.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Hız Değeri</div>
+<p><code>kutuHiz</code> değerini <code>1.0f</code> ve <code>12.0f</code> yaparak farkı hissedin. Düşük değer = hassas kontrol, yüksek değer = hızlı ama kaba hareket.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Sağ Tıkla Çizim</div>
+<p><code>MOUSE_BUTTON_LEFT</code> yerine <code>MOUSE_BUTTON_RIGHT</code> yazın. Artık sağ tıkla çizim yaparsınız.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Dizi Boyutunu Küçültün</div>
+<p><code>noktalar[1024]</code> yerine <code>noktalar[50]</code> ve sınır kontrolünü <code>&lt; 50</code> yapın. Sadece 50 nokta çizebilirsiniz — dizi taştığında program çökebilir!</p>
+</div>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="01-c-temelleri.html" class="prev">C Temelleri</a>
+        <a href="03-2d-cizim.html" class="next">2D Çizim ve Şekiller</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>

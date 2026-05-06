@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Işıklandırma ve Gölgelendirme - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>Işıklandırma</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>Neden Işık Lazım?</h2>
+
+<p>Işık olmadan 3D nesneler <strong>düz</strong> görünür — sanki 2D şekiller gibi. Bir küre, ışıksız çizildiğinde düz bir daire gibi görünür. Işık eklediğinizde derinlik, hacim ve gerçekçilik kazanır.</p>
+
+<p>Gerçek dünyada gördüğümüz her şey şu zincirin sonucudur:</p>
+<ol>
+<li><strong>Işık kaynağı</strong> ışık yayar (güneş, ampul)</li>
+<li>Işık <strong>nesneye</strong> çarpar</li>
+<li>Nesne yüzeyinden yansıyan ışık <strong>göze</strong> ulaşır</li>
+</ol>
+
+<h2>Işık Türleri</h2>
+
+<table>
+<tr><th>Tür</th><th>Gerçek Dünya</th><th>Özellik</th></tr>
+<tr><td><strong>Ambient</strong></td><td>Bulutlu gün, oda ışığı</td><td>Her yeri eşit aydınlatır, gölge yok</td></tr>
+<tr><td><strong>Directional</strong></td><td>Güneş</td><td>Paralel ışınlar, yön sabit, mesafe önemsiz</td></tr>
+<tr><td><strong>Point</strong></td><td>Ampul, mum</td><td>Her yöne yayılır, mesafe ile azalır</td></tr>
+<tr><td><strong>Spot</strong></td><td>El feneri, sahne ışığı</td><td>Koni şeklinde, yönlü + mesafeli</td></tr>
+</table>
+
+<h2>Normal Vektör — Işığın Temeli</h2>
+
+<p><strong>Normal</strong> = yüzeyin "dışarı bakan yönü". Düz bir duvarın normali duvara dik olan oktur.</p>
+
+<ul>
+<li><strong>Küre normali:</strong> <code>normalize(nokta - merkez)</code> — her noktada farklı yöne bakar</li>
+<li><strong>Kutu normali:</strong> her yüzün sabit bir normali var:
+    <ul>
+    <li>Üst yüz: <code>(0, 1, 0)</code> — yukarı bakar</li>
+    <li>Sağ yüz: <code>(1, 0, 0)</code> — sağa bakar</li>
+    <li>Ön yüz: <code>(0, 0, -1)</code> — öne bakar</li>
+    </ul>
+</li>
+</ul>
+
+<h2>Lambert Diffuse Modeli</h2>
+
+<p>En basit ışık modeli. Formül:</p>
+
+<pre><code class="language-c">yogunluk = max(0, dot(N, L))</code></pre>
+
+<p>Burada:</p>
+<ul>
+<li><strong>N</strong> = yüzey normali (birim vektör)</li>
+<li><strong>L</strong> = ışığa doğru yön (birim vektör)</li>
+<li><strong>dot(N, L)</strong> = iç çarpım = iki vektörün ne kadar "aynı yöne" baktığı</li>
+</ul>
+
+<h3>dot product Ne Hesaplar?</h3>
+
+<table>
+<tr><th>dot(N, L)</th><th>Anlam</th><th>Sonuç</th></tr>
+<tr><td>1.0</td><td>N ve L aynı yöne bakıyor</td><td>En parlak</td></tr>
+<tr><td>0.0</td><td>N ve L dik açıda</td><td>Aydınlık yok</td></tr>
+<tr><td>&lt; 0</td><td>Işık arka taraftan geliyor</td><td>Aydınlık yok (0'a clamp)</td></tr>
+</table>
+
+<pre><code class="language-c">// dot product hesabi
+float dot = N.x*L.x + N.y*L.y + N.z*L.z;
+
+// Raylib'de hazir fonksiyon:
+float dot = Vector3DotProduct(N, L);</code></pre>
+
+<h2>Ambient + Diffuse</h2>
+
+<pre><code class="language-c">sonucRenk = temelRenk * (ambient + diffuse)</code></pre>
+
+<ul>
+<li><strong>ambient = 0.1</strong> — sabit minimum ışık. Olmasa tamamen karanlık yüzler oluşur.</li>
+<li><strong>diffuse = Lambert hesabı</strong> — yüzeyin ışığa ne kadar baktığına göre.</li>
+</ul>
+
+<h2>Renk Hesabı</h2>
+
+<pre><code class="language-c">Color skalaRenk(Color c, float k) {
+    if (k &gt; 1.0f) k = 1.0f;  // tasmasin
+    return (Color){
+        (unsigned char)(c.r * k),
+        (unsigned char)(c.g * k),
+        (unsigned char)(c.b * k),
+        255
+    };
+}</code></pre>
+
+<p>Rengin RGB değerlerini yoğunlukla çarpıyoruz. <code>k = 0</code> → siyah, <code>k = 1</code> → orijinal renk.</p>
+
+<h2>Örnek Kod: Lambert Işıklandırma</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek13_isiklandirma.c</div>
+<p>WASD ile ışık kaynağını taşıyın. Nesnelerin aydınlanmasının nasıl değiştiğini gözlemleyin. SPACE ile ambient'ı kapatın.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+#include "raymath.h"
+
+float lambert(Vector3 N, Vector3 L)
+{
+    float d = Vector3DotProduct(N, L);
+    return d &gt; 0.0f ? d : 0.0f;
+}
+
+Color skalaRenk(Color c, float k)
+{
+    if (k &gt; 1.0f) k = 1.0f;
+    return (Color){ (unsigned char)(c.r*k),
+                    (unsigned char)(c.g*k),
+                    (unsigned char)(c.b*k), 255 };
+}
+
+int main(void)
+{
+    const int W = 950, H = 650;
+    InitWindow(W, H, "Ornek 13 - Isiklandirma");
+    SetTargetFPS(60);
+
+    Camera3D kam = { {6,6,6}, {0,0,0}, {0,1,0}, 50, CAMERA_PERSPECTIVE };
+    Vector3 isikPos = { 3, 4, 2 };
+    Color isikRenk = WHITE;
+    float ambient = 0.1f;
+    bool ambOn = true;
+
+    // Kutu yuzlerinin normal vektorleri
+    Vector3 kutuN[6] = {
+        {0,0,-1},  // on
+        {0,0,1},   // arka
+        {-1,0,0},  // sol
+        {1,0,0},   // sag
+        {0,1,0},   // ust
+        {0,-1,0},  // alt
+    };
+
+    while (!WindowShouldClose())
+    {
+        UpdateCamera(&amp;kam, CAMERA_ORBITAL);
+
+        // Isik kaynagini tasi
+        if (IsKeyDown(KEY_D)) isikPos.x += 0.1f;
+        if (IsKeyDown(KEY_A)) isikPos.x -= 0.1f;
+        if (IsKeyDown(KEY_W)) isikPos.z -= 0.1f;
+        if (IsKeyDown(KEY_S)) isikPos.z += 0.1f;
+        if (IsKeyDown(KEY_UP))   isikPos.y += 0.1f;
+        if (IsKeyDown(KEY_DOWN)) isikPos.y -= 0.1f;
+
+        // Ambient toggle
+        if (IsKeyPressed(KEY_SPACE)) ambOn = !ambOn;
+        ambient = ambOn ? 0.1f : 0.0f;
+
+        // Isik rengi
+        if (IsKeyPressed(KEY_ONE))   isikRenk = WHITE;
+        if (IsKeyPressed(KEY_TWO))   isikRenk = YELLOW;
+        if (IsKeyPressed(KEY_THREE)) isikRenk = SKYBLUE;
+
+        // Isik yonu hesapla
+        Vector3 kutuM = { 0, 0.75f, 0 };
+        Vector3 Lk = Vector3Normalize(Vector3Subtract(isikPos, kutuM));
+
+        BeginDrawing();
+            ClearBackground((Color){30,30,40,255});
+            BeginMode3D(kam);
+                DrawGrid(10, 1.0f);
+                DrawSphere(isikPos, 0.15f, isikRenk);  // isik gorseli
+
+                // Kutu: her yuz farkli aydinlikta
+                float b = 1.5f, y = b/2;
+                for (int i = 0; i &lt; 6; i++) {
+                    float lam = lambert(kutuN[i], Lk);
+                    Color c = skalaRenk(RED, ambient + lam * 0.9f);
+                    Vector3 p = Vector3Add(kutuM, Vector3Scale(kutuN[i], y));
+                    DrawCube(p,
+                        kutuN[i].x!=0 ? 0.02f : b-0.01f,
+                        kutuN[i].y!=0 ? 0.02f : b-0.01f,
+                        kutuN[i].z!=0 ? 0.02f : b-0.01f, c);
+                }
+                DrawCubeWires(kutuM, b,b,b, Fade(WHITE, 0.3f));
+
+                // Normal vektorleri gorsellestir
+                for (int i = 0; i &lt; 6; i++) {
+                    Vector3 s = Vector3Add(kutuM, Vector3Scale(kutuN[i], y));
+                    DrawLine3D(s, Vector3Add(s, Vector3Scale(kutuN[i], 0.5f)), YELLOW);
+                }
+            EndMode3D();
+
+            // UI
+            DrawRectangle(0,0,W,50, Fade(BLACK,0.8f));
+            DrawText("Isiklandirma Temelleri - Lambert Diffuse", 15, 13, 20, WHITE);
+            DrawText("WASD:isik tasi  SPACE:ambient  1/2/3:renk", 15, H-25, 13, GRAY);
+            DrawText(TextFormat("ambient=%.1f  lambert=max(0, dot(N,L))", ambient), 15, 60, 14, LIGHTGRAY);
+        EndDrawing();
+    }
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Satır Satır Açıklama</h3>
+
+<h4><code>float lambert(Vector3 N, Vector3 L)</code></h4>
+<p>İki vektörün iç çarpımını hesaplar. Negatifse 0 döndürür (arka taraftaki yüzler karanlık kalır, negatif ışık olmaz).</p>
+
+<h4><code>Vector3Normalize(Vector3Subtract(isikPos, kutuM))</code></h4>
+<p>Işık yönünü hesaplıyor:<br>
+1. <code>Subtract</code>: kutu merkezinden ışığa doğru vektör<br>
+2. <code>Normalize</code>: uzunluğu 1 yapır (birim vektör) — sadece yön bilgisi kalır</p>
+
+<h4><code>Vector3Scale(kutuN[i], y)</code></h4>
+<p>Normal vektörü kutu yarı boyutu ile çarpar — yüzeyin merkezini bulur. Örn: üst yüz normali <code>(0,1,0)</code> × 0.75 = <code>(0, 0.75, 0)</code> → kutunun üstü.</p>
+
+<h4>Her yüze farklı DrawCube</h4>
+<p>Her yüzü ayrı ayrı çiziyoruz çünkü her birinin farklı rengi var. Normal yönüne dik olmayan boyutları <code>0.02f</code> (çok ince) yaparak "düz panel" etkisi elde ediyoruz.</p>
+
+<h2>Shader Kavramı (Giriş)</h2>
+
+<p>Bu örnekte ışık hesabını <strong>CPU'da</strong> (C kodunda) yaptık. Gerçek oyunlarda bu hesap <strong>GPU'da</strong> yapılır — çok daha hızlı. GPU'da çalışan küçük programlara <strong>shader</strong> denir.</p>
+
+<ul>
+<li><strong>Vertex Shader:</strong> 3D koordinatları 2D ekran koordinatına dönüştürür</li>
+<li><strong>Fragment Shader:</strong> Her pikselin rengini hesaplar (ışık dahil)</li>
+</ul>
+
+<p>Raylib'de shader kullanımı:</p>
+<pre><code class="language-c">Shader shader = LoadShader("vertex.vs", "fragment.fs");
+// ... kullan ...
+UnloadShader(shader);</code></pre>
+
+<p>Raylib örneklerinde <code>rlights.h</code> başlık dosyası hazır ışık sistemi sunar. Bu ileri bir konudur — ama temeli burada öğrendiniz!</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Ambient Kapatın</div>
+<p>SPACE tuşuna basarak ambient'ı 0 yapın. Işığa bakmayan yüzler tamamen siyah olur — gerçek hayatta bunun olmamasının sebebi dolaylı ışık (indirect light) ve ortam yansımalarıdır.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Işığı Tepeden Getirin</div>
+<p>UP tuşuna basarak <code>isikPos.y</code>'yi yükseltin (10+). Işık tam tepeden gelince sadece üst yüz aydınlanır — diğerleri karanlık.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Lambert Kontrolünü Kaldırın</div>
+<p><code>d &gt; 0.0f ? d : 0.0f</code> yerine sadece <code>return d;</code> yazın. Negatif değerler rengi siyahın altına çeker — garip sonuçlar!</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Işık Rengi</div>
+<p>1/2/3 tuşları ile ışık rengini değiştirin. Sarı ışık altında kırmızı kutu turuncu görünür — renk karışımı!</p>
+</div>
+
+<h2>Özet: Bu Bölümde Öğrendiğimiz</h2>
+
+<p>Bu 7 bölümde sıfırdan başlayarak şunları öğrendiniz:</p>
+<ol>
+<li><strong>C temelleri:</strong> değişkenler, struct, tipler</li>
+<li><strong>Girdi:</strong> klavye, fare, gamepad</li>
+<li><strong>2D çizim:</strong> şekiller, yazı, doku, çarpışma</li>
+<li><strong>2D kamera:</strong> dünya vs ekran, zoom, takip</li>
+<li><strong>3D temel:</strong> eksenler, Camera3D, projeksiyon</li>
+<li><strong>3D kamera modları:</strong> free, orbital, FPS, third person</li>
+<li><strong>Işıklandırma:</strong> normal, Lambert, ambient</li>
+</ol>
+
+<p>Artık <a href="https://github.com/raysan5/raylib/tree/master/examples" target="_blank">raylib'in tüm örneklerini</a> inceleyip anlayabilecek temele sahipsiniz!</p>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="06-3d-kamera.html" class="prev">3D Kamera Modları</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>

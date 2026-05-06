@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Kamera Modları - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>3D Kamera Modları</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>UpdateCamera Fonksiyonu</h2>
+
+<p>Önceki bölümde kamerayı elle konumlandırdık. Ama raylib size hazır kamera kontrolleri sunar — tek satırla!</p>
+
+<pre><code class="language-c">UpdateCamera(&amp;kamera, CAMERA_ORBITAL);</code></pre>
+
+<p>Bu fonksiyon <strong>her karede</strong> çağrılır ve kameranın <code>position</code>, <code>target</code> değerlerini fare + klavye girdisine göre otomatik günceller.</p>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Neden &amp;kamera?</div>
+<p>C'de bir fonksiyona struct gönderdiğinizde, kopya gönderilir — orijinal değişmez. <code>&amp;</code> (adres operatörü) ile struct'ın <em>kendisini</em> (adresini) gönderirsiniz, böylece fonksiyon orijinali değiştirebilir. Bu "pointer" kavramıdır.</p>
+</div>
+
+<h2>4 Kamera Modu</h2>
+
+<h3>CAMERA_FREE — Serbest Uçuş</h3>
+<ul>
+<li><strong>WASD:</strong> ileri/geri/sağ/sol hareket</li>
+<li><strong>Fare:</strong> bakış yönü</li>
+<li><strong>Scroll:</strong> yakınlaş/uzaklaş</li>
+<li><strong>Kullanım:</strong> Sahne editörleri, debug modu, serbest keşif</li>
+</ul>
+<p>Kamera uzayda serbestçe "uçar". Hiçbir kısıtlama yok — yerçekimi de yok.</p>
+
+<h3>CAMERA_ORBITAL — Yörünge</h3>
+<ul>
+<li>Kamera, <strong>target</strong> noktasının etrafında otomatik döner</li>
+<li><strong>Scroll:</strong> yakınlaş/uzaklaş</li>
+<li><strong>Kullanım:</strong> Ürün gösterimi, 3D model inceleme, vitrin</li>
+</ul>
+<p>Hedefin etrafında sürekli döner. Bir nesneyi her açıdan incelemek için ideal.</p>
+
+<h3>CAMERA_FIRST_PERSON — Birinci Şahıs (FPS)</h3>
+<ul>
+<li><strong>WASD:</strong> yürüme (zeminde)</li>
+<li><strong>Fare:</strong> bakış yönü</li>
+<li><strong>Kullanım:</strong> FPS oyunlar, mimari yürüyüş</li>
+</ul>
+<p><code>position</code> = "gözünüzün" konumu. Fare ile etrafınıza bakarsınız, WASD ile yürürsünüz.</p>
+
+<h3>CAMERA_THIRD_PERSON — Üçüncü Şahıs</h3>
+<ul>
+<li>Kamera karakterin <strong>arkasından</strong> bakar</li>
+<li><strong>target</strong> = karakterin konumu</li>
+<li><strong>Kullanım:</strong> RPG, aksiyon oyunları</li>
+</ul>
+<p>Karakter önde yürür, kamera arkasından takip eder.</p>
+
+<h2>Fare İmleci Kontrolü</h2>
+
+<pre><code class="language-c">DisableCursor();  // Fareyi gizle ve pencereye kilitle
+EnableCursor();   // Fareyi geri getir
+
+// Programda M ile toggle:
+if (IsKeyPressed(KEY_M)) {
+    if (IsCursorHidden()) EnableCursor();
+    else DisableCursor();
+}</code></pre>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Neden Fare Gizlenir?</div>
+<p>FREE ve FIRST_PERSON modlarında fare hareketi bakış yönünü kontrol eder. Fare görünürse ve pencere kenarına gelirse, dönme durur. <code>DisableCursor()</code> fareyi "sonsuz" yapar — ne kadar hareket ederseniz edin kenar sorunu olmaz.</p>
+</div>
+
+<h2>Örnek Kod: 4 Mod Arası Geçiş</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek12_3d_kamera.c</div>
+<p>1-4 tuşları ile kamera modunu değiştirin. M ile fareyi açın/kapatın.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+
+int main(void)
+{
+    const int W = 950, H = 600;
+    InitWindow(W, H, "Ornek 12 - 3D Kamera Modlari");
+
+    Camera3D kam = { {5,5,5}, {0,0,0}, {0,1,0}, 55, CAMERA_PERSPECTIVE };
+
+    int mi = 0;  // aktif mod indexi
+    int modlar[] = { CAMERA_FREE, CAMERA_ORBITAL,
+                     CAMERA_FIRST_PERSON, CAMERA_THIRD_PERSON };
+    const char *ad[] = { "FREE", "ORBITAL", "FIRST_PERSON", "THIRD_PERSON" };
+
+    // Sahne nesneleri
+    Vector3 kp[] = { {0,0.5f,0},{3,0.5f,0},{-3,0.5f,0},
+                     {0,0.5f,3},{0,0.5f,-3},{3,1,3},{-3,0.5f,-3} };
+    Color kr[] = { RED, BLUE, GREEN, ORANGE, PURPLE, GOLD, SKYBLUE };
+
+    DisableCursor();  // Baslangicta fare gizli
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        // Mod degistir
+        if (IsKeyPressed(KEY_ONE))   { mi=0; kam.position=(Vector3){5,5,5}; }
+        if (IsKeyPressed(KEY_TWO))   { mi=1; kam.position=(Vector3){5,5,5}; }
+        if (IsKeyPressed(KEY_THREE)) {
+            mi=2;
+            kam.position=(Vector3){0,2,0};
+            kam.target=(Vector3){0,2,1};
+        }
+        if (IsKeyPressed(KEY_FOUR))  {
+            mi=3;
+            kam.position=(Vector3){0,2,-5};
+            kam.target=(Vector3){0,0,0};
+        }
+
+        // Fare toggle
+        if (IsKeyPressed(KEY_M)) {
+            if (IsCursorHidden()) EnableCursor();
+            else DisableCursor();
+        }
+
+        // KRITIK: Kamerayi guncelle
+        UpdateCamera(&amp;kam, modlar[mi]);
+
+        BeginDrawing();
+            ClearBackground((Color){180,200,220,255});
+
+            BeginMode3D(kam);
+                DrawPlane((Vector3){0,0,0}, (Vector2){30,30}, Fade(DARKGREEN,0.6f));
+                DrawGrid(30, 1.0f);
+
+                // Eksenler
+                DrawLine3D((Vector3){0,0,0}, (Vector3){5,0,0}, RED);
+                DrawLine3D((Vector3){0,0,0}, (Vector3){0,5,0}, GREEN);
+                DrawLine3D((Vector3){0,0,0}, (Vector3){0,0,5}, BLUE);
+
+                // Kutular
+                for (int i = 0; i &lt; 7; i++) {
+                    DrawCube(kp[i], 0.8f,0.8f,0.8f, Fade(kr[i],0.7f));
+                    DrawCubeWires(kp[i], 0.8f,0.8f,0.8f, kr[i]);
+                }
+            EndMode3D();
+
+            // UI
+            DrawRectangle(0,0,W,50, Fade(BLACK,0.7f));
+            DrawText(TextFormat("Mod: %s  [1-4 ile degistir]", ad[mi]), 15, 15, 18, YELLOW);
+            DrawText(TextFormat("pos=(%.1f,%.1f,%.1f) tgt=(%.1f,%.1f,%.1f)",
+                kam.position.x, kam.position.y, kam.position.z,
+                kam.target.x, kam.target.y, kam.target.z), 15, H-25, 12, GRAY);
+        EndDrawing();
+    }
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Önemli Noktalar</h3>
+
+<h4>Mod Değişiminde Position Sıfırlama</h4>
+<p>Her mod, kamerayı farklı şekilde kontrol eder. FIRST_PERSON moduna geçerken <code>position</code>'ı <code>{0,2,0}</code> ve <code>target</code>'ı <code>{0,2,1}</code> yapıyoruz — göz seviyesinde, ileriye bakıyor. Yoksa kamera anlamsız bir yerde kalır.</p>
+
+<h4><code>DrawPlane</code> vs <code>DrawGrid</code></h4>
+<p><code>DrawPlane</code> — düz yeşil zemin (dolu yüzey). <code>DrawGrid</code> — referans çizgiler (ızgara). İkisini birlikte kullanmak sahneye derinlik hissi verir.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: ORBITAL Target Değiştirin</div>
+<p>ORBITAL modunda <code>kam.target</code>'ı <code>{3, 0, 3}</code> yapın (2 numaralı satırda). Kamera artık orijin yerine o noktanın etrafında döner!</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: FOV 120°</div>
+<p>FREE modunda <code>kam.fovy = 120</code> yapın. Balık gözü efekti! Her şey bükülmüş ve garip görünür — ama çok geniş alan görürsünüz.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: DisableCursor Kaldırın</div>
+<p><code>DisableCursor()</code> satırını yorum yapın (// ile). FREE modda fare pencere kenarına takılır ve kamera düzgün dönmez. Neden gerekli olduğunu anlarsınız.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: FIRST_PERSON Boy Ayarı</div>
+<p><code>kam.position.y = 0.5f</code> yapın — çömelmiş gibi. <code>= 5.0f</code> yapın — dev gibi! Y değeri "göz yüksekliğiniz"dir.</p>
+</div>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="05-3d-temel.html" class="prev">3D Temel</a>
+        <a href="07-isiklandirma.html" class="next">Işıklandırma</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>

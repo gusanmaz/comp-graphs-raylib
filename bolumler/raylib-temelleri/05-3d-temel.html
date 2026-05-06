@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Temel Kavramlar - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>3D Temel Kavramlar</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>2D'den 3D'ye Geçiş</h2>
+
+<p>2D'de her şey <strong>x</strong> (yatay) ve <strong>y</strong> (dikey) ile tanımlanıyordu. 3D'de bir eksen daha ekleniyor: <strong>z</strong> (derinlik). Bu üç eksenle uzaydaki herhangi bir noktayı tanımlayabilirsiniz.</p>
+
+<p>Raylib'in 3D eksen sistemi:</p>
+<ul>
+<li><strong>X</strong> = sağa doğru (kırmızı)</li>
+<li><strong>Y</strong> = yukarı doğru (yeşil)</li>
+<li><strong>Z</strong> = kameraya doğru / ekrandan dışarı (mavi)</li>
+</ul>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Neden Eksenler Önemli?</div>
+<p>Her 3D motor farklı eksen sistemi kullanabilir. Unity'de Y yukarı, Unreal'de Z yukarıdır. Raylib'de Y yukarıdır. Bunu bilmek, nesneleri doğru konumlandırmak için şarttır.</p>
+</div>
+
+<h2>Camera3D Yapısı</h2>
+
+<pre><code class="language-c">Camera3D kamera = { 0 };
+kamera.position   = (Vector3){ 6.0f, 6.0f, 6.0f };  // kameranin KONUMU
+kamera.target     = (Vector3){ 0.0f, 0.5f, 0.0f };  // BAKTIĞI nokta
+kamera.up         = (Vector3){ 0.0f, 1.0f, 0.0f };  // yukari yon
+kamera.fovy       = 50.0f;                           // gorus acisi
+kamera.projection = CAMERA_PERSPECTIVE;              // projeksiyon turu</code></pre>
+
+<h3>position — Kameranın 3D Konumu</h3>
+<p>Kamera uzayda nerede duruyor? <code>{6, 6, 6}</code> = x=6, y=6, z=6 noktasında — sahneye "çapraz yukarıdan" bakıyor.</p>
+
+<h3>target — Kameranın Baktığı Nokta</h3>
+<p>Kamera hangi noktaya odaklanıyor? <code>{0, 0.5, 0}</code> = orijinin biraz üstüne bakıyor.</p>
+
+<h3>up — Yukarı Yön</h3>
+<p>Kameranın "tepesi" hangi yöne bakıyor? Genelde <code>{0, 1, 0}</code> (Y yukarı). Bunu değiştirirseniz kamera "yana yatmış" gibi görünür.</p>
+
+<h3>fovy — Görüş Açısı (Field of View)</h3>
+<p>Derece cinsinden. Daha büyük = daha geniş görüş (ama distorsiyon artar). Tipik değerler: 45°-60°.</p>
+
+<h2>Projeksiyon Türleri</h2>
+
+<p>3D dünyayı 2D ekrana aktarmanın iki yolu var:</p>
+
+<h3>Perspektif (CAMERA_PERSPECTIVE)</h3>
+<ul>
+<li>Uzak nesneler <strong>küçük</strong>, yakın nesneler <strong>büyük</strong> görünür</li>
+<li>Gerçek hayattaki gibi — derinlik hissi verir</li>
+<li><code>fovy</code> = görüş açısı (derece)</li>
+<li>Oyunlar, simülasyonlar, gerçekçi render için</li>
+</ul>
+
+<h3>Ortografik (CAMERA_ORTHOGRAPHIC)</h3>
+<ul>
+<li>Uzak ve yakın nesneler <strong>aynı boyutta</strong> görünür</li>
+<li>Derinlik algısı yok — teknik çizim gibi</li>
+<li><code>fovy</code> = görünür alanın boyutu (birim cinsinden)</li>
+<li>2.5D oyunlar, harita görünümü, CAD programları için</li>
+</ul>
+
+<table>
+<tr><th>Özellik</th><th>Perspektif</th><th>Ortografik</th></tr>
+<tr><td>Uzak nesne</td><td>Küçük görünür</td><td>Aynı boyut</td></tr>
+<tr><td>Derinlik hissi</td><td>Var (gerçekçi)</td><td>Yok (düz)</td></tr>
+<tr><td>fovy anlamı</td><td>Görüş açısı (°)</td><td>Alan boyutu</td></tr>
+<tr><td>Kullanım</td><td>FPS, 3. şahıs oyun</td><td>Strateji, izometrik</td></tr>
+</table>
+
+<h2>3D Çizim Fonksiyonları</h2>
+
+<pre><code class="language-c">// Kup (kutu)
+DrawCube(pozisyon, genislik, yukseklik, derinlik, renk);
+DrawCubeWires(pozisyon, g, y, d, renk);  // sadece kenarlar
+
+// Kure
+DrawSphere(pozisyon, yaricap, renk);
+DrawSphereWires(pozisyon, yaricap, ringlar, dilimler, renk);
+
+// Silindir
+DrawCylinder(pozisyon, ustYaricap, altYaricap, yukseklik, dilim, renk);
+
+// Duz zemin
+DrawPlane(pozisyon, boyut, renk);  // boyut = Vector2 (en, derinlik)
+
+// Izgara (referans icin)
+DrawGrid(bolum_sayisi, aralık);
+
+// 3D cizgi
+DrawLine3D(baslangic, bitis, renk);
+
+// Tum 3D cizimler bu blogun icinde olmali:
+BeginMode3D(kamera);
+    // ... 3D cizimler ...
+EndMode3D();</code></pre>
+
+<h2>Örnek Kod: Perspektif vs Ortografik</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek11_3d_temel.c</div>
+<p>Ekranın sol yarısı perspektif, sağ yarısı ortografik projeksiyon gösterir. SPACE ile otomatik dönme, UP/DOWN ile FOV ayarı.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+#include &lt;math.h&gt;
+
+int main(void)
+{
+    const int W = 1000, H = 600;
+    InitWindow(W, H, "Ornek 11 - 3D Temel ve Projeksiyon");
+    SetTargetFPS(60);
+
+    // Perspektif kamera
+    Camera3D kamP = { {6,6,6}, {0,0.5f,0}, {0,1,0}, 50, CAMERA_PERSPECTIVE };
+    // Ortografik kamera
+    Camera3D kamO = { {6,6,6}, {0,0.5f,0}, {0,1,0}, 12, CAMERA_ORTHOGRAPHIC };
+
+    float donme = 0.0f;
+    bool otoDon = true;
+
+    while (!WindowShouldClose())
+    {
+        if (IsKeyPressed(KEY_SPACE)) otoDon = !otoDon;
+        if (otoDon) donme += 0.5f;
+
+        // FOV ayari
+        if (IsKeyDown(KEY_UP))   kamP.fovy -= 0.5f;
+        if (IsKeyDown(KEY_DOWN)) kamP.fovy += 0.5f;
+        if (kamP.fovy &lt; 10) kamP.fovy = 10;
+        if (kamP.fovy &gt; 120) kamP.fovy = 120;
+
+        // Kamerayi daire uzerinde dondur
+        float rad = donme * DEG2RAD;
+        kamP.position = (Vector3){ cosf(rad)*8, 5, sinf(rad)*8 };
+        kamO.position = kamP.position;
+
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            // Sol yari: PERSPEKTIF
+            BeginScissorMode(0, 0, W/2, H);
+            BeginMode3D(kamP);
+                DrawGrid(10, 1.0f);
+                DrawLine3D((Vector3){0,0,0}, (Vector3){3,0,0}, RED);
+                DrawLine3D((Vector3){0,0,0}, (Vector3){0,3,0}, GREEN);
+                DrawLine3D((Vector3){0,0,0}, (Vector3){0,0,3}, BLUE);
+                DrawCube((Vector3){0,0.5f,0}, 1,1,1, Fade(RED, 0.7f));
+                DrawCubeWires((Vector3){0,0.5f,0}, 1,1,1, MAROON);
+                DrawSphere((Vector3){2,0.5f,0}, 0.5f, Fade(BLUE, 0.7f));
+                DrawCylinder((Vector3){-2,0,0}, 0.5f,0.5f,1.5f,12, Fade(GREEN, 0.7f));
+            EndMode3D();
+            EndScissorMode();
+
+            // Sag yari: ORTOGRAFIK
+            BeginScissorMode(W/2, 0, W/2, H);
+            ClearBackground((Color){245,245,250,255});
+            BeginMode3D(kamO);
+                DrawGrid(10, 1.0f);
+                DrawCube((Vector3){0,0.5f,0}, 1,1,1, Fade(RED, 0.7f));
+                DrawSphere((Vector3){2,0.5f,0}, 0.5f, Fade(BLUE, 0.7f));
+                DrawCylinder((Vector3){-2,0,0}, 0.5f,0.5f,1.5f,12, Fade(GREEN, 0.7f));
+            EndMode3D();
+            EndScissorMode();
+
+            // Etiketler
+            DrawLine(W/2, 0, W/2, H, DARKGRAY);
+            DrawRectangle(10,10,200,28, Fade(BLACK,0.6f));
+            DrawText("PERSPEKTIF", 20, 15, 18, WHITE);
+            DrawRectangle(W/2+10,10,200,28, Fade(BLACK,0.6f));
+            DrawText("ORTOGRAFIK", W/2+20, 15, 18, WHITE);
+            DrawText(TextFormat("FOV: %.0f  SPACE:don", kamP.fovy), 10, H-25, 13, GRAY);
+        EndDrawing();
+    }
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Önemli Kavramlar</h3>
+
+<h4><code>BeginScissorMode(x, y, w, h)</code></h4>
+<p>Ekranın belirli bir dikdörtgen alanına çizimi sınırlar. Burada ekranı ikiye bölmek için kullanıyoruz — sol yarı perspektif, sağ yarı ortografik.</p>
+
+<h4><code>DEG2RAD</code></h4>
+<p>Derece → radyan dönüşüm sabiti. <code>cosf()</code> ve <code>sinf()</code> radyan bekler. <code>donme * DEG2RAD</code> ile dereceyi radyana çeviririz.</p>
+
+<h4><code>cosf(rad)*8, 5, sinf(rad)*8</code></h4>
+<p>Kamerayı orijin etrafında <strong>daire üzerinde</strong> döndürür. cos/sin bir daire çizer (yarıçap=8), y=5 sabit kalır.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: FOV Değiştirin</div>
+<p>UP/DOWN ile perspektif FOV'u değiştirin. 20° = dar/tele lens (nesneler yakın ve düz), 100° = geniş açı (balık gözü etkisi, kenarlar eğrilir).</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Kamera Yüksekliği</div>
+<p><code>kamP.position</code> satırında <code>y=5</code> değerini <code>y=1</code> yapın — neredeyse zemin seviyesinden bakarsınız. <code>y=15</code> yapın — kuş bakışı.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Ortografik Boyut</div>
+<p><code>kamO.fovy = 12</code> değerini <code>5</code> yapın — yakınlaşır. <code>30</code> yapın — tüm sahne küçücük görünür. Perspektifteki zoom'un ortografik karşılığı budur.</p>
+</div>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="04-2d-kamera.html" class="prev">2D Kamera</a>
+        <a href="06-3d-kamera.html" class="next">3D Kamera Modları</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>

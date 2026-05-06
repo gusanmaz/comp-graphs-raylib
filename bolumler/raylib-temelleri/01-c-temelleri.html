@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C Temelleri ve Raylib Veri Tipleri - Bilgisayar Grafikleri Sifirdan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/style.css">
+    <script src="../../js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header class="site-header" style="padding: 1.5rem;">
+        <a href="../../index.html" style="color:#fff;text-decoration:none;">
+            <h1 style="font-size:1.5rem;margin:0;">&#x1F5A5; Bilgisayar Grafikleri &mdash; Sifirdan</h1>
+        </a>
+    </header>
+    <nav class="breadcrumb">
+        <a href="../../index.html">Ana Sayfa</a> &gt;
+        <a href="../../index.html#raylib-temelleri">Raylib Temelleri</a> &gt;
+        <span>C Temelleri ve Veri Tipleri</span>
+    </nav>
+    <main class="chapter-content">
+
+<h2>C Diline Hızlı Giriş</h2>
+
+<p>Bu bölümde sıfırdan başlayarak C dilinin temel yapılarını öğreneceksiniz. Daha önce Python, JavaScript veya başka bir dil kullandıysanız, C'nin "düşük seviyeli" yapısı sizi şaşırtabilir — ama korkmayın. Raylib ile görsel programlar yazmak için ihtiyacınız olan her şeyi burada bulacaksınız.</p>
+
+<h3>Değişken Türleri</h3>
+
+<p>C dilinde her değişkenin bir <strong>tipi</strong> vardır. Tip, değişkenin bellekte ne kadar yer kaplayacağını ve hangi değerleri tutabileceğini belirler:</p>
+
+<table>
+<tr><th>Tip</th><th>Boyut</th><th>Açıklama</th><th>Örnek</th></tr>
+<tr><td><code>int</code></td><td>4 byte</td><td>Tam sayı</td><td><code>int x = 42;</code></td></tr>
+<tr><td><code>float</code></td><td>4 byte</td><td>Ondalıklı sayı</td><td><code>float pi = 3.14f;</code></td></tr>
+<tr><td><code>double</code></td><td>8 byte</td><td>Çift hassas ondalık</td><td><code>double g = 9.81;</code></td></tr>
+<tr><td><code>char</code></td><td>1 byte</td><td>Tek karakter</td><td><code>char h = 'A';</code></td></tr>
+<tr><td><code>bool</code></td><td>1 byte</td><td>true / false</td><td><code>bool ok = true;</code></td></tr>
+</table>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: float Sonundaki "f"</div>
+<p>C'de <code>3.14</code> yazdığınızda derleyici bunu <code>double</code> olarak anlar. Eğer <code>float</code> bir değişkene atıyorsanız, <code>3.14f</code> yazarak "bu bir float" demiş olursunuz. Raylib'de hemen her yerde <code>float</code> kullanılır, bu yüzden sayıların sonuna <code>f</code> koymayı alışkanlık edinin.</p>
+</div>
+
+<h3>Değişken Tanımlama</h3>
+
+<p>C'de değişken tanımlamanın formülü şudur:</p>
+
+<pre><code class="language-c">tip isim = deger;</code></pre>
+
+<p>Örnekler:</p>
+
+<pre><code class="language-c">int skor = 0;           // tam sayi
+float hiz = 2.5f;       // ondalikli
+bool oyunBitti = false;  // dogru/yanlis
+char seviye = 'A';       // tek karakter</code></pre>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Tip Değiştirme</div>
+<p><code>float hiz = 2.5f;</code> satırını <code>int hiz = 2;</code> olarak değiştirin. Ondalık kısmı kaybolur — çünkü <code>int</code> sadece tam sayı tutar.</p>
+</div>
+
+<h3>struct (Yapı) Kavramı</h3>
+
+<p>Birden fazla değişkeni bir arada tutmak istediğinizde <strong>struct</strong> kullanırsınız. Bir "kutu" düşünün — içinde farklı türde şeyler var:</p>
+
+<pre><code class="language-c">// Bir daireyi tanimlayan yapi
+typedef struct {
+    float x;        // merkez X
+    float y;        // merkez Y
+    float yaricap;  // yaricap
+    Color renk;     // renk (bu da bir struct!)
+} Daire;</code></pre>
+
+<p><strong><code>typedef struct { ... } Daire;</code></strong> — Bu kalıp "yeni bir tip oluştur ve adına <code>Daire</code> de" anlamına gelir. Artık <code>Daire</code> kelimesini <code>int</code> veya <code>float</code> gibi kullanabilirsiniz:</p>
+
+<pre><code class="language-c">Daire d = { 100.0f, 200.0f, 30.0f, RED };
+// Alanlara erisim: nokta (.) ile
+d.x = 150.0f;
+d.yaricap = 50.0f;</code></pre>
+
+<h2>Raylib'in Temel Veri Tipleri</h2>
+
+<p>Raylib kütüphanesi kendi struct'larını sağlar. Bunları tanımlamanız gerekmez — <code>#include "raylib.h"</code> dediğinizde otomatik gelirler.</p>
+
+<h3>Vector2 — 2D Konum</h3>
+
+<pre><code class="language-c">// Vector2 icinde sadece x ve y var
+Vector2 konum = { 400.0f, 300.0f };
+konum.x += 5.0f;  // saga tasi</code></pre>
+
+<p><code>Vector2</code> her yerde kullanılır: nesne konumu, hız, yön, fare pozisyonu...</p>
+
+<h3>Vector3 — 3D Konum</h3>
+
+<pre><code class="language-c">// 3D uzayda bir nokta: x, y, z
+Vector3 pos = { 1.0f, 2.0f, 3.0f };
+pos.y += 0.5f;  // yukari tasi</code></pre>
+
+<h3>Color — Renk (RGBA)</h3>
+
+<pre><code class="language-c">// 4 deger: Kirmizi, Yesil, Mavi, Alpha (saydamlik)
+// Her biri 0-255 arasi
+Color turuncu = { 255, 165, 0, 255 };  // tam opak turuncu
+Color yarisaydam = { 255, 0, 0, 128 }; // %50 saydam kirmizi</code></pre>
+
+<p>Raylib hazır renkler sunar: <code>RED</code>, <code>GREEN</code>, <code>BLUE</code>, <code>WHITE</code>, <code>BLACK</code>, <code>YELLOW</code>, <code>PURPLE</code>, <code>ORANGE</code>, <code>RAYWHITE</code>, <code>DARKGRAY</code>, <code>LIGHTGRAY</code>...</p>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: Fade() Fonksiyonu</div>
+<p><code>Fade(RED, 0.5f)</code> — kırmızı rengin alpha değerini %50 yapar (yarı saydam). <code>0.0f</code> = tamamen görünmez, <code>1.0f</code> = tamamen opak.</p>
+</div>
+
+<h3>Rectangle — Dikdörtgen</h3>
+
+<pre><code class="language-c">// x, y, genislik, yukseklik
+Rectangle kutu = { 50, 100, 200, 80 };
+// x=50, y=100 noktasindan baslayan, 200 genis, 80 yuksek dikdortgen</code></pre>
+
+<h2>Raylib Program Yapısı</h2>
+
+<p>Her raylib programının iskeleti şöyledir:</p>
+
+<pre><code class="language-c">#include "raylib.h"   // raylib fonksiyonlarini dahil et
+
+int main(void)
+{
+    InitWindow(800, 600, "Pencere Basligi");  // pencere ac
+    SetTargetFPS(60);  // saniyede 60 kare
+
+    while (!WindowShouldClose())   // ESC veya X basilana kadar
+    {
+        // --- GUNCELLEME ---
+        // Degiskenleri degistir, fizik hesapla...
+
+        // --- CIZIM ---
+        BeginDrawing();
+            ClearBackground(RAYWHITE);  // ekrani temizle
+            // Burada cizim yap...
+        EndDrawing();
+    }
+
+    CloseWindow();  // pencereyi kapat, kaynaklari serbest birak
+    return 0;
+}</code></pre>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: SetTargetFPS(60)</div>
+<p>Bu fonksiyon "saniyede en fazla 60 kare çiz" der. Neden? Ekranlar genelde 60Hz'dir. 60 FPS üstü gereksiz iş yükü yaratır. Ayrıca oyun mantığı tutarlı kalır.</p>
+</div>
+
+<div class="info-box"><div class="box-title">ℹ️ Bilgi: while Döngüsü</div>
+<p><code>while (!WindowShouldClose())</code> — "pencere kapatılmadığı sürece devam et" demek. Her dönüşte 1 kare (frame) çizilir. 60 FPS = saniyede 60 kez döner.</p>
+</div>
+
+<h2>Örnek Kod: Tüm Tipleri Görelim</h2>
+
+<div class="raylib-box"><div class="box-title">🎮 Raylib: ornek07_c_temelleri.c</div>
+<p>Bu program tüm temel C tiplerini ve raylib veri yapılarını ekranda canlı olarak gösterir.</p>
+</div>
+
+<pre><code class="language-c">#include "raylib.h"
+#include &lt;math.h&gt;
+
+typedef struct {
+    float x;
+    float y;
+    float yaricap;
+    Color renk;
+} Daire;
+
+int main(void)
+{
+    int sayac = 0;
+    float hiz = 2.5f;
+    bool aktif = true;
+
+    Vector2 konum2d = { 400.0f, 300.0f };
+    Vector3 konum3d = { 1.0f, 2.0f, 3.0f };
+    Color   renk    = { 255, 100, 50, 255 };
+    Rectangle kutu  = { 50, 400, 200, 80 };
+
+    Daire daire1 = { 600.0f, 250.0f, 40.0f, BLUE };
+    Daire daire2 = { 300.0f, 450.0f, 25.0f, GREEN };
+
+    InitWindow(900, 600, "Ornek 07 - C Temelleri");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose())
+    {
+        sayac++;
+        Vector2 fare = GetMousePosition();
+        konum2d.x += (fare.x - konum2d.x) * 0.02f;
+        konum2d.y += (fare.y - konum2d.y) * 0.02f;
+        renk.g = (unsigned char)(128 + 127 * sinf(sayac * 0.03f));
+        renk.b = (unsigned char)(128 + 127 * cosf(sayac * 0.03f));
+        daire1.x = 600.0f + sinf(sayac * 0.05f) * 100.0f;
+
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+            DrawText("C Temelleri ve Raylib Veri Tipleri", 20, 15, 24, DARKGRAY);
+
+            DrawText(TextFormat("int   sayac = %d", sayac), 20, 60, 18, DARKBLUE);
+            DrawText(TextFormat("float hiz   = %.1f", hiz), 20, 85, 18, DARKBLUE);
+            DrawText(TextFormat("bool  aktif = %s", aktif ? "true" : "false"), 20, 110, 18, DARKBLUE);
+
+            DrawCircleV(konum2d, 12.0f, RED);
+            DrawText(TextFormat("Vector2 = { %.0f, %.0f }", konum2d.x, konum2d.y), 20, 145, 16, MAROON);
+
+            DrawRectangle(20, 245, 60, 30, renk);
+            DrawText(TextFormat("Color = { %d, %d, %d, %d }", renk.r, renk.g, renk.b, renk.a), 90, 250, 16, DARKGRAY);
+
+            DrawRectangleRec(kutu, Fade(SKYBLUE, 0.5f));
+            DrawRectangleLinesEx(kutu, 2, DARKBLUE);
+
+            DrawCircle((int)daire1.x, (int)daire1.y, daire1.yaricap, daire1.renk);
+            DrawCircle((int)daire2.x, (int)daire2.y, daire2.yaricap, daire2.renk);
+        EndDrawing();
+    }
+    CloseWindow();
+    return 0;
+}</code></pre>
+
+<h3>Kodun Satır Satır Açıklaması</h3>
+
+<h4><code>#include &lt;math.h&gt;</code></h4>
+<p>Matematik fonksiyonlarını kullanmak için: <code>sinf()</code> (sinüs) ve <code>cosf()</code> (kosinüs). Bunlar -1 ile 1 arası değer döndürür ve renk animasyonu için kullanıyoruz.</p>
+
+<h4><code>typedef struct { ... } Daire;</code></h4>
+<p>Kendi veri tipimizi tanımlıyoruz. İçinde 4 alan var: x, y (konum), yaricap (büyüklük), renk (görünüm). Bu sayede bir daireyle ilgili tüm bilgiyi tek bir değişkende tutabiliriz.</p>
+
+<h4><code>konum2d.x += (fare.x - konum2d.x) * 0.02f;</code></h4>
+<p>Bu satır <strong>lineer interpolasyon</strong> (lerp) yapar. Fare ile konum2d arasındaki farkın %2'si kadar hareket eder — bu da yumuşak bir takip efekti oluşturur.</p>
+
+<h4><code>(unsigned char)(128 + 127 * sinf(...))</code></h4>
+<p><code>sinf()</code> -1 ile 1 arası değer verir. <code>128 + 127 * sin</code> = 1 ile 255 arası. <code>(unsigned char)</code> ile float'ı 0-255 arası tam sayıya dönüştürüyoruz — çünkü Color'ın alanları <code>unsigned char</code> tipindedir.</p>
+
+<h4><code>TextFormat("int sayac = %d", sayac)</code></h4>
+<p><code>TextFormat</code> raylib'in <code>printf</code> benzeri fonksiyonudur. <code>%d</code> = tam sayı, <code>%.1f</code> = 1 ondalıklı float, <code>%s</code> = metin. Sonucu ekrana yazdırmak için <code>DrawText</code> ile kullanılır.</p>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Lerp Hızını Değiştirin</div>
+<p><code>0.02f</code> değerini <code>0.1f</code> yapın — kırmızı daire fareye çok daha hızlı takip eder. <code>0.005f</code> yapın — çok yavaşlar. Bu "yumuşak takip" oyunlarda çok kullanılır.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Renk Animasyon Hızı</div>
+<p><code>sinf(sayac * 0.03f)</code> içindeki <code>0.03f</code> değerini <code>0.1f</code> yapın — renk çok hızlı değişir. <code>0.005f</code> yapın — çok yavaş ve zarif bir geçiş olur.</p>
+</div>
+
+<div class="try-box"><div class="box-title">🧪 Deneyin: Kendi Struct'ınızı Ekleyin</div>
+<p>Bir <code>Kare</code> struct'ı tanımlayın: <code>typedef struct { float x, y, boyut; Color renk; } Kare;</code> — sonra <code>DrawRectangle</code> ile ekrana çizdirin.</p>
+</div>
+
+<h2>Özet</h2>
+
+<ul>
+<li><strong>int, float, bool</strong> — temel C tipleri</li>
+<li><strong>struct</strong> — birden fazla değeri bir arada tutar</li>
+<li><strong>Vector2, Vector3</strong> — konum ve yön için</li>
+<li><strong>Color</strong> — RGBA renk (0-255)</li>
+<li><strong>Rectangle</strong> — dikdörtgen alanı</li>
+<li><strong>InitWindow → while → EndDrawing → CloseWindow</strong> — program iskeleti</li>
+</ul>
+
+    </main>
+    <nav class="chapter-nav">
+        <a href="02-girdi-isleme.html" class="next">Girdi İşleme</a>
+    </nav>
+    <footer class="site-footer">
+        <p>&copy; Bilgisayar Grafikleri &mdash; Sifirdan</p>
+    </footer>
+</body>
+</html>
